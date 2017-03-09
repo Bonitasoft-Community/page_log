@@ -1,0 +1,218 @@
+<!doctype html>
+<!--[if lt IE 7]>
+<html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>
+<html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>
+<html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js"> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <title>Ping</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="pageResource?page=custompage_log&location=style/animate.css" />
+    <link rel="stylesheet" href="pageResource?page=custompage_log&location=style/bootstrap.min.css">
+	<link rel="stylesheet" href="pageResource?page=custompage_log&location=style/main.css">
+	<link rel="stylesheet" href="pageResource?page=custompage_log&location=style/style.css">
+
+	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
+	<script type="text/javascript" src="https://www.google.com/uds/?file=visualization&amp;v=1&amp;hl=fr&amp;packages=corechart&amp;async=2"></script>
+	<link type="text/css" href="https://www.google.com/uds/api/visualization/1.0/ff67c3772da186a412ae3231c32409e9/ui+fr.css" rel="stylesheet">
+	<script type="text/javascript" src="https://www.google.com/uds/api/visualization/1.0/ff67c3772da186a412ae3231c32409e9/format+fr,default+fr,ui+fr,corechart+fr.I.js"></script>
+	<link href="https://ajax.googleapis.com/ajax/static/modules/gviz/1.0/core/tooltip.css" rel="stylesheet" type="text/css">
+
+	<script src="pageResource?page=custompage_log&location=3rd-party/jquery.min.js"></script>
+	<script src="pageResource?page=custompage_log&location=3rd-party/angular.min.js"></script>
+	<script	src="pageResource?page=custompage_log&location=3rd-party/angular-timer.js"></script>
+
+<style>
+.Loading {
+    display: inline-block;
+    vertical-align: middle;
+    background-position: center;
+    background:no-repeat;
+    background-image: url('data:image/gif;base64,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');
+    width:20px;
+    height:20px;
+    margin-top:6px;
+    margin-right:7px;
+}
+</style>
+</head>
+<body ng-app="logmonitor">
+
+<h1><center>Logs on server</center></h1>
+
+
+
+<div class="container-fluid" id="accordion">
+	<div class="row">
+
+		<div class="col-xs-12">
+			<div class="bs-component"  ng-controller="LogControler as logctrl">
+				<legend class="text-primary"><span class="glyphicon glyphicon-th"></span><input type="checkbox" ng-model="logctrl.display.showLogs"></input>Files</legend>
+				
+				<div class="panel panel-primary" ng-show="logctrl.display.showLogs">
+					Log Path : {{logctrl.logpath}}<p>
+				
+					<div class="explanation">
+					All logs files found in the directory are display. Clicks on one to see its content.
+					</div>
+					<button ng-click="logctrl.getAllFilesLog()" class="btn btn-success btn-xs">&nbsp;Refresh&nbsp;</button><p>
+					<table class="table table-striped table-hover table-condensed" > <!--  style="background-color:#C49E71" -->
+					
+						<tr ng-repeat="(key, val) in logctrl.listfileslog track by $index">
+							<td>{{key}}</td>
+							<td ng-repeat="logfile in val track by $index">
+								<button ng-click="logctrl.getFileLog( logfile )" class="btn btn-info btn-xs">&nbsp;{{logfile}}&nbsp;</button>
+								&nbsp;&nbsp;
+							</td>
+						</tr>
+					</table>
+	 				
+				
+					<button id="collectbtn" ng-click="logctrl.getFileLog()" class="btn btn-info btn-xs">Read current log</button>
+					</div>
+					
+				<legend class="text-primary"><span class="glyphicon glyphicon-th"></span><input type="checkbox" ng-model="logctrl.display.showFilter"></input>Filter</legend>
+				<div class="panel panel-primary" ng-show="logctrl.display.showFilter">
+					
+					<h3>Filter</h3>
+					<table>
+						<tr>
+							<td><input type="checkbox" ng-model="logctrl.display.filterError" ng-disabled="logctrl.display.brutResult">Only error & warm</input></td>
+							<td><input type="checkbox" ng-model="logctrl.display.filterShortDate" ng-disabled="logctrl.display.brutResult">Short Date</input></td>
+							<td>Filter text : <input type="input" ng-model="logctrl.display.filterText" ng-disabled="logctrl.display.brutResult"></input></td>
+						</tr>
+					</table>
+					<button ng-click="logctrl.refresh()" class="btn btn-success btn-xs">Refresh</button>
+						
+					<h3>Display</h3>
+					<table>
+						<tr><td><input type="checkbox" ng-model="logctrl.display.brutResult" ng-change="logctrl.refresh()">Brut</input></td>
+							<td><input type="checkbox" ng-model="logctrl.display.showLine">Line</input></td>
+							<td><input type="checkbox" ng-model="logctrl.display.showDate">Date</input></td>
+							<td><input type="checkbox" ng-model="logctrl.display.showLevel">Level</input></td>
+							<td><input type="checkbox" ng-model="logctrl.display.showContent">Content</input></td>
+							<td><input type="checkbox" ng-model="logctrl.display.showLocalisation">Localisation</input></td>
+						</tr>
+					</table>
+					<!--  Display={{logctrl.display}}-->
+				</div>
+				<legend class="text-primary"><span class="glyphicon glyphicon-th"></span>Log</legend>
+				<div class="panel panel-primary">
+					
+					Log file : {{logctrl.logFileName}}<p>
+					
+
+					<span ng-show="logctrl.wait">
+						<span class="Loading" >.</span> Loading...
+					</span>
+						
+					<button ng-click="logctrl.refresh()" class="btn btn-success btn-xs">Refresh</button>	
+					<table id='maintimer' class="maintimercls">
+					<tr>
+						<td>	
+							<input type="checkbox" ng-model="logctrl.display.filterAutomaticRefresh" ng-change="logctrl.changeTimer()">AutomaticRefresh </input>
+						</td>
+						<td>
+							<input type="checkbox" ng-model="logctrl.display.filterTail" >Tail</input>
+						</td>
+					</tr>
+					</table>
+					
+					<!-- pagination -->
+					<table>
+					<tr>
+						<td>Nb lines per pages : 
+							<select ng-model="logctrl.display.numberperpage" ng-change="logctrl.refresh()">						
+								<option value="100">100</option>
+								<option value="200">200</option>
+								<option value="500">500</option>
+							</select>
+							&nbsp;
+						</td><td>
+							<pagination ng-model="logctrl.display.pagenumber" total-items="logctrl.display.totallines" items-per-page="logctrl.display.numberperpage"
+							ng-click="logctrl.refresh()">
+							</pagination>
+						</td>
+					</tr>
+					</table>
+					
+					<!-- Display -->
+						
+					<table class="table table-striped table-hover table-condensed" > <!--  style="background-color:#C49E71" -->
+						<tr>
+							<th ng-show="logctrl.display.brutResult">Log</th>
+	
+							<th ng-show="! logctrl.display.brutResult && logctrl.display.showLine" >#</th>
+							<th ng-show="! logctrl.display.brutResult && logctrl.display.showDate">Date</th>
+							<th ng-show="! logctrl.display.brutResult && logctrl.display.showLevel">Level</th>
+							<th ng-show="! logctrl.display.brutResult && logctrl.display.showContent">Content</th>
+							<th ng-show="! logctrl.display.brutResult && logctrl.display.showLocalisation">Localisation</th>
+	          
+						</tr>
+						<tr ng-repeat="logitem in logctrl.getPageResult() track by $index">
+							<td ng-show=" logctrl.display.brutResult">{{logitem.l}}</td>
+	
+							<td ng-show="! logctrl.display.brutResult && logctrl.display.showLine" style="{{logitem.stl}}">{{logitem.lin}}</td>
+							<td ng-show="! logctrl.display.brutResult && logctrl.display.showDate" style="{{logitem.stl}}">{{logitem.dte}}</td>
+							<td ng-show="! logctrl.display.brutResult && logctrl.display.showLevel"  style="{{logitem.stl}}">{{logitem.lvl}}</td>
+							<td ng-show="! logctrl.display.brutResult && logctrl.display.showContent" style="{{logitem.stl}}">{{logitem.cnt}}</td>
+							<td ng-show="! logctrl.display.brutResult && logctrl.display.showLocalisation" style="{{logitem.stl}}">{{logitem.loc}}</td>
+	   					</tr>
+					</table>
+					
+					<span ng-show="logctrl.wait">
+						<span class="Loading" >.</span> Loading...
+					</span>
+					<button ng-click="logctrl.refresh()" class="btn btn-success btn-xs">Refresh</button>
+					
+				
+					
+					<!-- pagination -->					
+					<table>
+					<tr>
+						<td>Nb lines per pages : 
+							<select ng-model="logctrl.display.numberperpage" ng-change="logctrl.refresh()">						
+								<option value="100">100</option>
+								<option value="200">200</option>
+								<option value="500">500</option>
+							</select>
+							&nbsp;
+						</td><td>
+							<pagination ng-model="logctrl.display.pagenumber" total-items="logctrl.display.totallines" items-per-page="logctrl.display.numberperpage"
+							ng-click="logctrl.refresh()">
+							</pagination>
+						</td>
+					</tr>
+					</table>	
+				
+				</div>
+			</div>
+		</div>
+
+	</div>
+</div>
+
+
+
+<!-- Third party dependencies -->
+
+
+<script src="pageResource?page=custompage_log&location=3rd-party/angular-resource.min.js"></script>
+<script src="pageResource?page=custompage_log&location=3rd-party/angular-cookies.min.js"></script>
+
+<script src="pageResource?page=custompage_log&location=3rd-party/bootstrap/js/bootstrap.min.js"></script>
+<script src="pageResource?page=custompage_log&location=3rd-party/angular-bootstrap-tpls.min.js"></script>
+<script src="pageResource?page=custompage_log&location=3rd-party/angular-file-upload.js"></script>
+<script src="pageResource?page=custompage_log&location=3rd-party/ng-google-chart.js"></script>
+
+
+<!-- Application dependencies -->
+<script src="pageResource?page=custompage_log&location=logmonitor.js"></script>
+
+</body>
+</html>
