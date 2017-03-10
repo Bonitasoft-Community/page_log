@@ -38,12 +38,11 @@ import org.bonitasoft.engine.exception.DeletionException;
 import org.bonitasoft.engine.exception.ServerAPIException;
 import org.bonitasoft.engine.exception.UnknownAPITypeException;
 
-import com.bonitasoft.engine.api.TenantAPIAccessor;
+import org.bonitasoft.engine.api.TenantAPIAccessor;
 import org.bonitasoft.engine.session.APISession;
 import org.bonitasoft.engine.api.CommandAPI;
 import org.bonitasoft.engine.api.ProcessAPI;
 import org.bonitasoft.engine.api.IdentityAPI;
-import com.bonitasoft.engine.api.PlatformMonitoringAPI;
 
 
 import org.bonitasoft.page.log.LogAccess;
@@ -83,7 +82,6 @@ public class Index implements PageController {
 			
 			APISession session = pageContext.getApiSession()
 			ProcessAPI processAPI = TenantAPIAccessor.getProcessAPI(session);
-			PlatformMonitoringAPI platformMonitoringAPI = TenantAPIAccessor.getPlatformMonitoringAPI(session);
 			IdentityAPI identityApi = TenantAPIAccessor.getIdentityAPI(session);
 			
             HashMap<String,Object> result=null;
