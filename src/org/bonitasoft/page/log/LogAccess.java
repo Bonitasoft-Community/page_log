@@ -551,7 +551,7 @@ public class LogAccess {
      */
     protected static String getLogPath()
     {
-        final String logPath = System.getProperty("CATALINA_HOME");
+        final String logPath = System.getProperty("catalina.home");
         // logger.info("LogAccess: getFilesLog : logpath=" + logPath);
         if (logPath == null) {
             return null;
