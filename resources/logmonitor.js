@@ -80,7 +80,9 @@ appCommand.controller('LogControler',
 		var self=this;
 		self.wait = true;
 		this.display.fileName = logfile;
-		var json = angular.toJson(this.display, false);
+		
+		var json= encodeURI( angular.toJson(this.display, true));
+
 		
 		$http.get( '?page=custompage_log&action=getLog&json='+json )
 				.success( function ( jsonResult ) {

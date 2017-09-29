@@ -95,6 +95,8 @@ public class Index implements PageController {
             
 			else if ("getLog".equals(action))
 			{
+			    json = (json==null ? null : java.net.URLDecoder.decode(json, "UTF-8"));
+			       
                 LogParameter logParameters = LogParameter.getInstanceFromJsonSt(json);
                 logParameters.produceJson=true;
                 if ("Y".equals(isLog))
