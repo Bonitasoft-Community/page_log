@@ -25,6 +25,7 @@ appCommand.controller('LogControler',
 
 	this.wait = false;
 	this.listfileslog=[];
+	this.listfilesselected={};
 	this.timerInterval=30;
 	this.refreshisrunning = false;
 	 
@@ -44,7 +45,7 @@ appCommand.controller('LogControler',
 				})
 				.error( function() {
 					self.wait = false;
-					alert('an error occure');
+					// alert('an error occure');
 					});
 	}
 	this.getAllFilesLog();
@@ -58,12 +59,14 @@ appCommand.controller('LogControler',
 				'filterShortDate':true,
 				'filterAutomaticRefresh':false,
 				'filterTail': false,
+				'enableAnalysisError':true,
 				'brutResult' : false,
 				'showLine' : false,
 				'showDate' : true,
 				'showLevel' : true,
 				'showContent': true,
-				'showLocalisation' : true };
+				'showLocalisation' : true,
+				'showCompact' : false};
 	this.listLogItems=[];
 	
 	this.getPageResult = function()
@@ -74,7 +77,7 @@ appCommand.controller('LogControler',
 	// ---------------------- file log
 	this.getFileLog = function( logfile )
 	{
-		console.log("Start refresh");
+		console.log("Start refresh logile=["+logfile+"]");
 		
 		this.refreshisrunning=true;
 		var self=this;
@@ -84,22 +87,26 @@ appCommand.controller('LogControler',
 		var json= encodeURI( angular.toJson(this.display, true));
 
 		
-		$http.get( '?page=custompage_log&action=getLog&json='+json )
+		$http.get( '?page=custompage_log&action=getLog&paramjson='+json )
 				.success( function ( jsonResult ) {
-						self.listLogItems 		= jsonResult.listLogItems;
-						self.logFileName 		= jsonResult.logfilename;	
-						self.display.completeLogFileName 		= jsonResult.completeLogFileName;	
-						self.display.totallines 		= jsonResult.totalLines;
-						self.wait = false;
-						self.refreshisrunning=false;
-						<!-- document.getElementById('countdowntimer').addCDSeconds( self.timerInterval); -->
+					self.listLogItems 					= jsonResult.listLogItems;
+					self.analysisSynthese               = jsonResult.analysisSynthese;
+					// self.analysisTimeLine				= jsonResult.analysisTimeLine;
+					$scope.analysisTimeLine		 		= JSON.parse(jsonResult.analysisTimeLine.graph);
+					
+					self.logFileName 					= jsonResult.logfilename;	
+					self.display.completeLogFileName 	= jsonResult.completeLogFileName;	
+					self.display.totalLines 			= jsonResult.totalLines;
+					self.wait 							= false;
+					self.refreshisrunning				= false;	
+					// close the logs file panel
+					self.display.showLogs = false;
 
 				})
 				.error( function() {
 					self.wait = false;
 					self.refreshisrunning=false;
-					<!--  document.getElementById('countdowntimer').addCDSeconds( self.timerInterval); -->
-					alert('an error occure');
+					// alert('an error occure');
 					});
 	}
 
@@ -126,10 +133,39 @@ appCommand.controller('LogControler',
 	}
 	this.initInterval();
 	
-	
+	/**
+	 * return the style of the line. If the compact display is required, add a short padding
+	 */
+	this.getLineStyle = function ( logline )
+	{
+		var line= logline.stl;
+		if (this.display.showCompact)
+			line = line + ";padding:1px;";
+		return line;
+	}
 
+	/**
+	 * download the files
+	 */
+	this.getDowloadFile = function()
+	{
+		var listToDowload={ "listdaysdownload": []};
+		for ( var i in this.listfilesselected)
+			{
+			if (this.listfilesselected[i] )
+				listToDowload.listdaysdownload.push(  i );
+			}
+		if (listToDowload.length==0)
+		{
+			
+			return;			
+		}
 
+		var json= encodeURI( angular.toJson(listToDowload, true));
+		return json;
+	};
 });
+
 
 
 
