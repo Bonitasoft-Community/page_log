@@ -9,7 +9,7 @@
 <html class="no-js"> <!--<![endif]-->
 <head>
     <meta charset="utf-8">
-    <title>Ping</title>
+    <title>Log</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
     <link rel="stylesheet" href="pageResource?page=custompage_log&location=style/animate.css" />
@@ -43,8 +43,12 @@
 </head>
 <body ng-app="logmonitor">
 
-<h1><center>Logs on server</center></h1>
-
+	<center>
+	<table>
+		<tr><td><h1>Logs on server</h1></td><td style="font-size:0.8em;vertical-align:bottom"> V2.1</span></td>
+		</tr>
+	</table>
+	</center>
 
 
 <div class="container-fluid" id="accordion">
@@ -63,22 +67,23 @@
 				</legend>
 				
 				<div class="panel panel-primary" ng-show="logctrl.display.showLogs">
-					Log Path : {{logctrl.logpath}}<p>
-				
+					Log Path : <span ng-repeat="path in logctrl.logpath track by $index">{{path}},&nbsp;&nbsp;</span><p>
+			
 					<div class="explanation">
 					All logs files found in the directory are display. Clicks on one to see its content.
 					</div>
-				
+					
+					
 					<button ng-click="logctrl.getAllFilesLog()" class="btn btn-success btn-xs">&nbsp;Refresh&nbsp;</button><p>
 
-					<button ng-click="logctrl.getFileLog()" class="btn btn-info btn-xs">Current log</button>
+					<button ng-click="logctrl.getCurrentLog()" class="btn btn-info btn-xs">Current log</button>
 
 					<table class="table table-striped table-hover table-condensed" > <!--  style="background-color:#C49E71" -->
 					
 						<tr ng-repeat="(key, val) in logctrl.listfileslog track by $index">
 							<td><input type="checkbox" ng-model="logctrl.listfilesselected[ key ]" title="All files on the {{key}} are selected, then ask the download">&nbsp;&nbsp;{{key}}</input></td>
 							<td ng-repeat="logfile in val track by $index">
-								<button ng-click="logctrl.getFileLog( logfile )" class="btn btn-info btn-xs">&nbsp;{{logfile}}&nbsp;</button>
+								<button ng-click="logctrl.getLog( logfile )" class="btn btn-info btn-xs" title="{{logfile.completeFileName}}">&nbsp;{{logfile.fileName}}&nbsp;</button>
 								&nbsp;&nbsp;
 							
 							</td>
@@ -88,7 +93,7 @@
 					<table>
 					<tr>
 						<td style="padding: 20px">
-							<button  ng-click="logctrl.getFileLog()" class="btn btn-info btn-xs">Current log</button>
+							<button ng-click="logctrl.getCurrentLog()" class="btn btn-info btn-xs">Current log</button>
 						</td>
 						<td style="padding: 20px">
 	 						<a  class="btn btn-primary" href="?page=custompage_log&action=zipanddownload&paramjson={{logctrl.getDowloadFile()}}">Zip and Download</a>	 						

@@ -35,7 +35,7 @@ appCommand.controller('LogControler',
 	{
 		var self=this;
 		self.wait = true;
-
+		
 		$http.get( '?page=custompage_log&action=getFilesLog' )
 				.success( function ( jsonResult ) {
 					self.listfileslog 	= jsonResult.listfileslog;
@@ -75,14 +75,26 @@ appCommand.controller('LogControler',
 	}
 	
 	// ---------------------- file log
-	this.getFileLog = function( logfile )
+	this.getCurrentLog = function ()
 	{
-		console.log("Start refresh logile=["+logfile+"]");
+		console.log("Start currentLog");
+		this.display.fileName ="";
+		this.display.pathName ="";
+		this.callGetLog();
+	}
+	this.getLog = function( logfile )
+	{
+		this.display.fileName = logfile.fileName;
+		this.display.pathName = logfile.pathName;
+		this.callGetLog();
+	}
+	this.callGetLog = function()
+	{
+		console.log("Start callGetLog");
 		
-		this.refreshisrunning=true;
 		var self=this;
 		self.wait = true;
-		this.display.fileName = logfile;
+		self.refreshisrunning=true;
 		
 		var json= encodeURI( angular.toJson(this.display, true));
 

@@ -5,8 +5,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Method;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,6 +20,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
+import java.util.logging.FileHandler;
+import java.util.logging.Filter;
+import java.util.logging.Handler;
+import java.util.logging.LogManager;
 import java.util.logging.Logger;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -58,7 +64,7 @@ public class LogAccess {
 
 		public boolean logInformation = false;
 		public String fileName;
-		public String completeFileName;
+		public String pathName;
 		public boolean produceJson = false;
 		public boolean brutResult = false;
 
@@ -77,22 +83,11 @@ public class LogAccess {
 		public List<String> zipanddownload;
 
 		public String getFileName() {
-			if (fileName != null) {
-				return fileName;
-			}
-
-			// get the current file
-			final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
-
-			return "bonita." + sdf.format(new Date()) + ".log";
+			return fileName;
 		}
 
 		public String getCompleteFileName() {
-			if (completeFileName != null) {
-				return completeFileName;
-			} else {
-				return getLogPath() + File.separatorChar + getFileName();
-			}
+			return pathName + File.separatorChar + getFileName();
 		}
 
 		/**
@@ -113,6 +108,8 @@ public class LogAccess {
 			logParameter.numberPerPage = Toolbox.getLong(jsonHash.get("numberperpage"), 100L);
 			logParameter.brutResult = Toolbox.getBoolean(jsonHash.get("brutResult"), false);
 			logParameter.fileName = (String) jsonHash.get("fileName");
+			logParameter.pathName = (String) jsonHash.get("pathName");
+
 			logParameter.filterError = Toolbox.getBoolean(jsonHash.get("filterError"), false);
 			logParameter.filterText = (String) jsonHash.get("filterText");
 			if (logParameter.filterText != null && logParameter.filterText.trim().length() == 0) {
@@ -144,6 +141,7 @@ public class LogAccess {
 		int posEndDate = -1;
 
 	}
+
 	/*
 	 * *************************************************************************
 	 * *******
@@ -156,6 +154,37 @@ public class LogAccess {
 	 * *************************************************************************
 	 * *******
 	 */
+	public static class FileInformation {
+
+		public String fileName;
+		public String pathName;
+
+		public String getFileName() {
+			return fileName;
+		}
+
+		public String getPathName() {
+			return pathName;
+		}
+
+		public String getCompleteFileName() {
+			return pathName + File.separatorChar + fileName;
+		}
+
+		public Map<String, String> getMap() {
+			Map<String, String> map = new HashMap<String, String>();
+			map.put("fileName", getFileName());
+			map.put("pathName", getPathName());
+			map.put("completeFileName", getCompleteFileName());
+			return map;
+
+		}
+	}
+
+	public static class filesInformation {
+		final Map<String, List<FileInformation>> mapLogs = new HashMap<String, List<FileInformation>>();
+
+	}
 
 	/**
 	 * get the list of files
@@ -164,55 +193,83 @@ public class LogAccess {
 	 *         list of String (one string per file): "bonita.2017-11-08.log",
 	 *         "catalina.2017-11-08.log")
 	 */
-	public static Map<String, List<String>> getFilesLog() {
+	public static Map<String, List<FileInformation>> getFilesInfoLog() {
 		logger.info("LogAccess: getFilesLog");
 
-		final String logPath = getLogPath();
-		if (logPath == null) {
-			return new HashMap<String, List<String>>();
+		final List<String> listLogPath = getLogPath();
+		final Map<String, List<FileInformation>> mapLogs = new HashMap<String, List<FileInformation>>();
+		if (listLogPath == null) {
+			return mapLogs;
 		}
-		try {
-			final File folder = new File(logPath);
-			logger.info("LogAccess: listFiles=" + folder.getCanonicalPath());
-			final File[] listOfFiles = folder.listFiles();
-			if (listOfFiles == null) {
-				logger.info("LogAccess: no file under =" + folder.getCanonicalPath());
 
-				return new HashMap<String, List<String>>();
-			}
-			final Map<String, List<String>> mapLogs = new HashMap<String, List<String>>();
-
-			for (int i = 0; i < listOfFiles.length; i++) {
-				if (listOfFiles[i].isFile()) {
-					final String name = listOfFiles[i].getName();
-
-					final StringTokenizer st = new StringTokenizer(name, ".");
-					final String filename = st.hasMoreTokens() ? st.nextToken() : "";
-					final String filedate = st.hasMoreTokens() ? st.nextToken() : "";
-					List<String> listFiles = (List<String>) mapLogs.get(filedate);
-					if (listFiles == null) {
-						listFiles = new ArrayList<String>();
-					}
-					listFiles.add(name);
-					mapLogs.put(filedate, listFiles);
-					// logger.info("Add in [" + filedate + "] :" + listFiles);
+		for (String logPath : listLogPath) {
+			try {
+				final File folder = new File(logPath);
+				logger.info("LogAccess: listFiles=" + folder.getCanonicalPath());
+				final File[] listOfFiles = folder.listFiles();
+				if (listOfFiles == null) {
+					logger.info("LogAccess: no file under =" + folder.getCanonicalPath());
+					continue;
 				}
+
+				for (int i = 0; i < listOfFiles.length; i++) {
+					if (listOfFiles[i].isFile()) {
+						final String name = listOfFiles[i].getName();
+						if (!name.endsWith(".log"))
+							continue;
+
+						final StringTokenizer st = new StringTokenizer(name, ".");
+						final String filename = st.hasMoreTokens() ? st.nextToken() : "";
+						final String filedate = st.hasMoreTokens() ? st.nextToken() : "";
+						List<FileInformation> listFiles = (List<FileInformation>) mapLogs.get(filedate);
+						if (listFiles == null) {
+							listFiles = new ArrayList<FileInformation>();
+						}
+						FileInformation infoFile = new FileInformation();
+						infoFile.fileName = name;
+						infoFile.pathName = logPath;
+						listFiles.add(infoFile);
+
+						mapLogs.put(filedate, listFiles);
+						// logger.info("Add in [" + filedate + "] :" +
+						// listFiles);
+					}
+				}
+
+			} catch (final Exception e) {
+				final StringWriter sw = new StringWriter();
+				e.printStackTrace(new PrintWriter(sw));
+				final String exceptionDetails = sw.toString();
+				logger.severe("LogAccess.getFilesLog :" + exceptionDetails);
+				continue;
+
 			}
+		} // end loop all logPath
 			// now, set the map to a list
 			// logger.info("Before sort " + mapLogs);
-			final Map<String, List<String>> sortMapLogs = new TreeMap<String, List<String>>(mapLogs);
-			// logger.info("After sort " + sortMapLogs);
-			return sortMapLogs;
+		final Map<String, List<FileInformation>> sortMapLogs = new TreeMap<String, List<FileInformation>>(mapLogs);
+		// logger.info("After sort " + sortMapLogs);
+		return sortMapLogs;
+	}
 
-		} catch (final Exception e) {
-			final StringWriter sw = new StringWriter();
-			e.printStackTrace(new PrintWriter(sw));
-			final String exceptionDetails = sw.toString();
-			logger.severe("LogAccess :" + exceptionDetails);
-			return new HashMap<String, List<String>>();
-
+	/**
+	 * return the same information for JSON
+	 * 
+	 * @return
+	 */
+	public static Map<String, List<Map<String, String>>> getFilesLog() {
+		final Map<String, List<FileInformation>> infoLogs = getFilesInfoLog();
+		// now translate
+		logger.fine("LogAccess.getFilesLog : transform the information for JSON");
+		final Map<String, List<Map<String, String>>> mapLogs = new HashMap<String, List<Map<String, String>>>();
+		for (String key : infoLogs.keySet()) {
+			List<Map<String, String>> listFiles = new ArrayList<Map<String, String>>();
+			mapLogs.put(key, listFiles);
+			for (FileInformation fileInformation : infoLogs.get(key)) {
+				listFiles.add(fileInformation.getMap());
+			}
 		}
-
+		return mapLogs;
 	}
 
 	/*
@@ -248,8 +305,30 @@ public class LogAccess {
 						+ (logParameter.pageNumber * logParameter.numberPerPage + logParameter.numberPerPage) + "]" + " filterError=" + logParameter.filterError + " fiterText[" + logParameter.filterText + "]");
 			}
 
-			logInformation.logFileName = logParameter.getFileName();
-			logInformation.completeLogFileName = logParameter.getCompleteFileName();
+			if (logParameter.getFileName() == null || logParameter.getFileName().length() == 0) {
+				// we need the CurrentLogFile
+				final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+				logInformation.logFileName = "bonita." + sdf.format(new Date()) + ".log";
+				logger.fine("LogAccess.getLog : Search Current Log based on file [" + logInformation.logFileName + "] or [server.log]");
+
+				List<String> listPath = getLogPath();
+				for (String logPath : listPath) {
+					File file = new File(logPath + File.separatorChar + logInformation.logFileName);
+					if (file.exists())
+						logInformation.completeLogFileName = file.getAbsolutePath();
+					else {
+						file = new File(logPath + File.separatorChar + "server.log");
+						if (file.exists())
+							logInformation.completeLogFileName = file.getAbsolutePath();
+					}
+
+				}
+				logger.info("LogAccess.getLog : Found Current Log based on[" + logInformation.logFileName + "] ?  [" + logInformation.completeLogFileName + "]");
+
+			} else {
+				logInformation.logFileName = logParameter.getFileName();
+				logInformation.completeLogFileName = logParameter.getCompleteFileName();
+			}
 			BEvent errorDuringDecodage = null;
 			// all lines
 			// Attention : add the currentlogitem at the last moment
@@ -257,7 +336,7 @@ public class LogAccess {
 			FormatLog formatLog = new FormatLog();
 			String detectDate = null;
 
-			br = new BufferedReader(new FileReader(logParameter.getCompleteFileName()));
+			br = new BufferedReader(new FileReader(logInformation.completeLogFileName));
 
 			String line = br.readLine();
 			lineNumber++;
@@ -265,7 +344,7 @@ public class LogAccess {
 			while (line != null) {
 				// manage
 				if (true) // lineNumber >= logParameter.firstLine && lineNumber
-							// < logParameter.firstLine + logParameter.nbLines)
+				// < logParameter.firstLine + logParameter.nbLines)
 				{
 
 					if (logParameter.brutResult) {
@@ -376,7 +455,7 @@ public class LogAccess {
 			}
 
 			logInformation.end();
-			
+
 			if (errorDuringDecodage != null) {
 				logInformation.listEvents.add(errorDuringDecodage);
 			}
@@ -399,42 +478,147 @@ public class LogAccess {
 		return logInformation;
 	}
 
+	/* ******************************************************************** */
+	/*                                                                      */
+	/* LogPath */
+	/*                                                                      */
+	/*                                                                      */
+	/* ******************************************************************** */
 	/**
-	 * return the path where all logs are
+	 * return All paths where logs are
 	 *
 	 * @return
 	 */
-	protected static String getLogPath() {
-		final String logPath = System.getProperty("catalina.home");
-		// logger.info("LogAccess: getFilesLog : logpath=" + logPath);
-		if (logPath == null) {
-			return null;
-		}
-		try {
-			final File folder = new File(logPath + File.separatorChar + "logs" + File.separatorChar);
+	protected static List<String> getLogPath() {
 
-			return folder.getCanonicalPath();
-		} catch (final Exception e) {
-			final StringWriter sw = new StringWriter();
-			e.printStackTrace(new PrintWriter(sw));
-			final String exceptionDetails = sw.toString();
-			logger.severe("LogAccess.getLogPath :" + exceptionDetails);
-		}
-		return "";
+		// nota: by then handler, we may have nothing, because the handler may
+		// be attach to a parent
+		// secondly, even if the handler is a FileHandler, it will not give its
+		// directory :-(
+		List<String> listPath = new ArrayList<String>();
+
+		getFilePathThomcat(listPath);
+		getFilePathJboss(listPath);
+
+		return listPath;
 	}
 
-	/*
-	 * *************************************************************************
-	 * *******
+	/**
+	 * get the file when the logging is a Java.util.logging (TOMCAT usage for
+	 * example)
+	 * 
+	 * @return
 	 */
-	/*                                                                                  */
+	protected static void getFilePathThomcat(List<String> listPath) {
+		LogManager logManager = LogManager.getLogManager();
+		String handlers = logManager.getProperty("handlers");
+
+		logger.fine("LogAccess.getFilePathThomcat : LogManagerClass[" + logManager.getClass().getName() + "] TOMCAT handlers[" + handlers + "]");
+		if (handlers != null) {
+			StringTokenizer st = new StringTokenizer(handlers, ",");
+			while (st.hasMoreTokens()) {
+				String handler = st.nextToken().trim();
+				String directory = logManager.getProperty(handler + ".directory");
+				String fileName = logManager.getProperty(handler + ".fileName");
+				logger.fine("LogAccess.getFilePathThomcat: getCanonicalPath :detect [" + handler + "] directory[" + directory + "], fileName[" + fileName + "]");
+				if (directory != null) {
+					File fileDirectory = new File(directory);
+					try {
+						if (!listPath.contains(fileDirectory.getCanonicalPath()))
+							listPath.add(fileDirectory.getCanonicalPath());
+
+					} catch (IOException e) {
+						logger.severe("LogAccess.getFilePathThomcat: getCanonicalPath Error  [" + fileDirectory.getAbsolutePath() + "] file[" + fileDirectory.getName() + "] error[" + e.toString() + "]");
+					}
+				}
+				if (fileName != null) {
+					File fileFileName = new File(fileName);
+					if (!listPath.contains(fileFileName.getParent()))
+						listPath.add(fileFileName.getParent());
+
+				}
+			}
+		}
+		String logPathVariable = System.getProperty("catalina.home");
+		if (logPathVariable != null) {
+			File fileDirectory = new File(logPathVariable);
+			try {
+				if (!listPath.contains(fileDirectory.getCanonicalPath()))
+					listPath.add(fileDirectory.getCanonicalPath());
+
+			} catch (IOException e) {
+				logger.severe("LogAccess.getFilePathThomcat: getCanonicalPath Error  [" + fileDirectory.getAbsolutePath() + "] file[" + fileDirectory.getName() + "] error[" + e.toString() + "]");
+			}
+
+		}
+		logger.fine("LogAccess.getFilePathThomcat: getCanonicalPath : by env[catalina.home] logpath=" + logPathVariable);
+		logger.info("LogAccess.getFilePathThomcat: listPath=" + listPath);
+		return;
+
+	}
+
+	/**
+	 * in JBOSS, the fileHandler has a "getFile"
+	 */
+	protected static void getFilePathJboss(List<String> listPath) {
+		LogManager logManager = LogManager.getLogManager();
+		Logger loggerBonitasoft = Logger.getLogger("org.bonitasoft");
+		int loopParent = -1;
+		while (loggerBonitasoft != null && loopParent < 10) {
+			loopParent++;
+			Handler[] handlers = loggerBonitasoft.getHandlers();
+			logger.fine("LogAccess.getFilePathJboss : LogManagerClass[" + logManager.getClass().getName() + "] Logger[" + loggerBonitasoft.getName() + "] handlers[" + handlers.length + "] useParent[" + loggerBonitasoft.getUseParentHandlers() + "] loopParent=" + loopParent);
+
+			for (int i = 0; i < handlers.length; i++) {
+				Handler handler = handlers[i];
+				logger.fine("LogAccess.getFilePathJboss handler.className[" + handler.getClass().getName() + "]");
+				if (handler.getClass().getName().equals("org.jboss.logmanager.handlers.FileHandler") || handler.getClass().getName().equals("org.jboss.logmanager.handlers.PeriodicRotatingFileHandler")) {
+					try {
+
+						Class classHandler = handler.getClass();
+						// I don't want to load the JBOSS class in that
+						// circonstance
+						Method methodeGetFile = classHandler.getMethod("getFile", null);
+						File fileDirectory = (File) methodeGetFile.invoke(handler, null);
+						if (fileDirectory != null) {
+							try {
+								String path;
+								if (fileDirectory.isDirectory())
+									path = fileDirectory.getCanonicalPath();
+								else
+									path = fileDirectory.getParent();
+								if (!listPath.contains(path))
+									listPath.add(path);
+								logger.fine("LogAccess.getFilePathJboss Handler : file name=[" + fileDirectory.getName() + "] path=" + fileDirectory.getPath() + "] getCanonicalPath=" + fileDirectory.getCanonicalPath() + "]  getParent=" + fileDirectory.getParent() + "]");
+							} catch (Exception e) {
+								logger.severe("LogAccess.getFilePathThomcat: getCanonicalPath Error  [" + fileDirectory.getAbsolutePath() + "] file[" + fileDirectory.getName() + "] error[" + e.toString() + "]");
+							}
+						}
+					} catch (Exception e) {
+						logger.severe("LogAccess.getFilePathJboss Error during call GetFile method on a JBOSS object" + e.toString());
+					}
+
+				}
+			} // end for
+			// search on the parent now
+			if (loggerBonitasoft.getUseParentHandlers()) {
+				loggerBonitasoft = loggerBonitasoft.getParent();
+			} else
+				loggerBonitasoft = null;
+
+		}
+		logger.info("LogAccess.getFilePathJboss: end detection listPath=" + listPath);
+		return;
+
+	}
+
+	/* ******************************************************************** */
+	/*                                                                      */
 	/* Zip and Download */
-	/*                                                                                  */
-	/*                                                                                  */
-	/*
-	 * *************************************************************************
-	 * *******
-	 */
+	/*                                                                      */
+	/*                                                                      */
+	/* ******************************************************************** */
+
 	public static class LogZip {
 		public ByteArrayOutputStream containerZip = new ByteArrayOutputStream();
 	}
@@ -446,8 +630,7 @@ public class LogAccess {
 	 * @return
 	 */
 	public static LogZip getZipAndDownload(LogParameter logParameter) {
-		Map<String, List<String>> allFiles = getFilesLog();
-		final String logPath = getLogPath();
+		Map<String, List<FileInformation>> allFiles = getFilesInfoLog();
 
 		LogZip logZip = new LogZip();
 		try {
@@ -455,14 +638,14 @@ public class LogAccess {
 
 			if (logParameter.zipanddownload != null)
 				for (String dayKey : logParameter.zipanddownload) {
-					List<String> filesOfTheDay = allFiles.get(dayKey);
+					List<FileInformation> filesOfTheDay = allFiles.get(dayKey);
 					if (filesOfTheDay == null)
 						continue;
-					for (String oneFile : filesOfTheDay) {
-						ZipEntry ze = new ZipEntry(oneFile);
+					for (FileInformation oneFile : filesOfTheDay) {
+						ZipEntry ze = new ZipEntry(oneFile.fileName);
 						zos.putNextEntry(ze);
 
-						FileInputStream fr = new FileInputStream(logPath + File.separatorChar + oneFile);
+						FileInputStream fr = new FileInputStream(oneFile.getCompleteFileName());
 						byte[] buffer = new byte[10024];
 
 						int len;

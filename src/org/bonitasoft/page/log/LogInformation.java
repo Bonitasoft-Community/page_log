@@ -102,10 +102,9 @@ public class LogInformation {
 		}
 	}
 
-	public void end()
-	{
+	public void end() {
 		logAnalyseError.end();
-		
+
 	}
 	/*
 	 * *************************************************************************

@@ -26,22 +26,26 @@ public class LogItem {
 
 	/** normal way to collect the information */
 	final StringBuffer content = new StringBuffer();
-	
-	/** brut line : this string is then used
+
+	/**
+	 * brut line : this string is then used
 	 * 
 	 */
 	public String line;
 
-	/** some LogItem are in fact the same error. So, to get a correct Analysis, the different logItem are linked
+	/**
+	 * some LogItem are in fact the same error. So, to get a correct Analysis,
+	 * the different logItem are linked
 	 * 
 	 */
 	final private List<LogItem> listLinkedLogItem = new ArrayList<LogItem>();
 	/**
-	 * in general, the nbLinkedLog == listLinkedLogItem.size() but if the list is too big, then the new item is not recorded.
+	 * in general, the nbLinkedLog == listLinkedLogItem.size() but if the list
+	 * is too big, then the new item is not recorded.
 	 */
 	int nbLinkedLog;
-	final static int maxNbLinkedLog=100;
-	
+	final static int maxNbLinkedLog = 100;
+
 	// this is an internal mark to detect the first line : on the second line,
 	// there are some interresing information
 	public boolean firstLine;
@@ -124,37 +128,41 @@ public class LogItem {
 	 * ***********************************************************************
 	 */
 	/**
-	 * one error may be on multiple LogItem. In order to perform a correct Analysis, the different logItem are chained in the first one
+	 * one error may be on multiple LogItem. In order to perform a correct
+	 * Analysis, the different logItem are chained in the first one
 	 * 
 	 * @param appendStr
 	 */
-	public void link(LogItem linkedLogItem )
-	{
-		
-		// protect the server : if there are too much log linked, we do not record it
+	public void link(LogItem linkedLogItem) {
+
+		// protect the server : if there are too much log linked, we do not
+		// record it
 		nbLinkedLog++;
-		if (this.listLinkedLogItem.size()<maxNbLinkedLog)
-			this.listLinkedLogItem.add(linkedLogItem );
+		if (this.listLinkedLogItem.size() < maxNbLinkedLog)
+			this.listLinkedLogItem.add(linkedLogItem);
 	}
-	public long getTime() {		
+
+	public long getTime() {
 		return dateTime == null ? 0 : dateTime.getTime();
 	}
-	/** as the header, return the 30 first characters
+
+	/**
+	 * as the header, return the 30 first characters
 	 * 
 	 */
-	public String getHeader()
-	{
-		String header= content.toString().trim();
-		// if the header is something like (default task-7) org.bonitasoft.engine.bpm.flownode.UserTaskNotFoundException: USER, then remove the (default task-7) which is the worker ID
-		if (header.startsWith("("))
-		{
+	public String getHeader() {
+		String header = content.toString().trim();
+		// if the header is something like (default task-7)
+		// org.bonitasoft.engine.bpm.flownode.UserTaskNotFoundException: USER,
+		// then remove the (default task-7) which is the worker ID
+		if (header.startsWith("(")) {
 			int pos = header.indexOf(")");
-			if (pos!=-1)
-				header = header.substring(pos+1);
+			if (pos != -1)
+				header = header.substring(pos + 1);
 		}
-		if (header.length()>200)
-			return header.substring(0,200);
-		return header;		
+		if (header.length() > 200)
+			return header.substring(0, 200);
+		return header;
 	}
 
 	public String getFirstWord(int numberOfWord) {
@@ -216,18 +224,18 @@ public class LogItem {
 	 * in order to save time, the deep analysis is done only on demande
 	 */
 	public void deepAnalysis() {
-		StringBuffer completeContent = new StringBuffer( content );
+		StringBuffer completeContent = new StringBuffer(content);
 		for (LogItem logItem : listLinkedLogItem)
-			completeContent.append( logItem.content );
+			completeContent.append(logItem.content);
 		String completeContentSt = completeContent.toString();
-		processDefinitionId = searchLong("PROCESS_DEFINITION_ID",completeContentSt);
-		flowNodeDefinitionId = searchLong("PROCESS_DEFINITION_ID",completeContentSt);
-		processInstanceId = searchLong("PROCESS_INSTANCE_ID",completeContentSt);
-		rootProcessInstanceId = searchLong("ROOT_PROCESS_INSTANCE_ID",completeContentSt);
-		connectorImplementationClassName = searchString("CONNECTOR_IMPLEMENTATION_CLASS_NAME",completeContentSt);
-		processDefinitionName = searchString("PROCESS_NAME",completeContentSt);
-		processDefinitionVersion = searchString("PROCESS_VERSION",completeContentSt);
-		flowNodeDefinitionName = searchString("FLOW_NODE_NAME",completeContentSt);
+		processDefinitionId = searchLong("PROCESS_DEFINITION_ID", completeContentSt);
+		flowNodeDefinitionId = searchLong("PROCESS_DEFINITION_ID", completeContentSt);
+		processInstanceId = searchLong("PROCESS_INSTANCE_ID", completeContentSt);
+		rootProcessInstanceId = searchLong("ROOT_PROCESS_INSTANCE_ID", completeContentSt);
+		connectorImplementationClassName = searchString("CONNECTOR_IMPLEMENTATION_CLASS_NAME", completeContentSt);
+		processDefinitionName = searchString("PROCESS_NAME", completeContentSt);
+		processDefinitionVersion = searchString("PROCESS_VERSION", completeContentSt);
+		flowNodeDefinitionName = searchString("FLOW_NODE_NAME", completeContentSt);
 
 		// search the LAST occurrence
 		// Caused by: org.apache.cxf.binding.soap.SoapFault:
@@ -235,8 +243,8 @@ public class LogItem {
 		int pos = completeContent.lastIndexOf("Caused by:");
 		if (pos != -1) {
 			// end of the line ?
-			pos = pos+"Caused by:".length();
-			int posEndLine = completeContent.indexOf(newLine,pos);
+			pos = pos + "Caused by:".length();
+			int posEndLine = completeContent.indexOf(newLine, pos);
 			if (posEndLine == -1)
 				causedBy = completeContent.substring(pos);
 			else
@@ -297,8 +305,8 @@ public class LogItem {
 
 	// format is : "PROCESS_DEFINITION_ID=5274809883096251272 |
 	// PROCESS_NAME=proc_livraison_physique
-	private Long searchLong(String prefix,String completeContentSt) {
-		String str = searchString(prefix,completeContentSt);
+	private Long searchLong(String prefix, String completeContentSt) {
+		String str = searchString(prefix, completeContentSt);
 		try {
 			return Long.valueOf(str);
 		} catch (Exception e) {
@@ -307,7 +315,7 @@ public class LogItem {
 		return null;
 	}
 
-	private String searchString(String prefix,String completeContentSt) {
+	private String searchString(String prefix, String completeContentSt) {
 		int pos = completeContentSt.indexOf(prefix + "=");
 		if (pos == -1)
 			return "";
