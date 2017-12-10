@@ -39,14 +39,14 @@ import org.bonitasoft.engine.exception.DeletionException;
 import org.bonitasoft.engine.exception.ServerAPIException;
 import org.bonitasoft.engine.exception.UnknownAPITypeException;
 
-import com.bonitasoft.engine.api.TenantAPIAccessor;
+import org.bonitasoft.engine.api.TenantAPIAccessor;
 import org.bonitasoft.engine.session.APISession;
 import org.bonitasoft.engine.api.CommandAPI;
 import org.bonitasoft.engine.api.ProcessAPI;
 import org.bonitasoft.engine.api.IdentityAPI;
 import org.bonitasoft.engine.api.BusinessDataAPI;
 
-import com.bonitasoft.engine.api.PlatformMonitoringAPI;
+
 
 
 import org.bonitasoft.page.log.LogAccess;
@@ -81,7 +81,6 @@ public class Actions {
 			IdentityAPI identityApi = TenantAPIAccessor.getIdentityAPI(session);
 			CommandAPI commandAPI = TenantAPIAccessor.getCommandAPI(session);
 			BusinessDataAPI businessDataAPI = TenantAPIAccessor.getBusinessDataAPI(session);
-			PlatformMonitoringAPI platformMonitoringAPI = TenantAPIAccessor.getPlatformMonitoringAPI(session);
 			 
 				
 			if ("getFilesLog".equals(action))
