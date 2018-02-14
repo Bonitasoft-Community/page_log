@@ -40,16 +40,20 @@ public class LogInformation {
 	/**
 	 * we collect this number of line
 	 */
-	public long totalLines = -1;
+	public long currentLine=0;
+	public long nbTotalLines = -1;
 
 	// if the produceJson is true, produce directly in Json
 	public List<BEvent> listEvents = new ArrayList<BEvent>();
 	public boolean addAsJson = true;
 
+	public long startTime;
+	 
 	public LogInformation(LogParameter logParameter) {
 		this.logParameter = logParameter;
-		this.logAnalyseError = new LogAnalyseError(logParameter.fileName, logParameter.enableAnalysisError);
+		this.logAnalyseError = new LogAnalyseError(logParameter);
 
+		this.startTime = System.currentTimeMillis();
 	}
 
 	/*
@@ -77,8 +81,8 @@ public class LogInformation {
 			// logger.info("Not keep the line " + logItem.lineNumber);
 			return;
 		}
-
-		totalLines++;
+		currentLine++;
+		
 		if (logParameter.filterTail) {
 			// we keep in the list the last numberPerPage
 			if (listLogs.size() >= logParameter.numberPerPage) {
@@ -90,7 +94,7 @@ public class LogInformation {
 
 			}
 		} else {
-			if (totalLines <= (logParameter.pageNumber - 1) * logParameter.numberPerPage || totalLines > logParameter.pageNumber * logParameter.numberPerPage) {
+			if (currentLine <= (logParameter.pageNumber - 1) * logParameter.numberPerPage || currentLine > logParameter.pageNumber * logParameter.numberPerPage) {
 				return;
 			}
 		}
@@ -102,9 +106,14 @@ public class LogInformation {
 		}
 	}
 
-	public void end() {
-		logAnalyseError.end();
-
+	/**
+	 * 
+	 * @param nbTotalLines
+	 */
+	public void end( long nbTotalLines) {
+		this.nbTotalLines= nbTotalLines;
+		logAnalyseError.end(nbTotalLines );
+		logAnalyseError.setTimeInMs( System.currentTimeMillis() - startTime);
 	}
 	/*
 	 * *************************************************************************

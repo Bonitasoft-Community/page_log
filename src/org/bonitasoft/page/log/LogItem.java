@@ -23,6 +23,7 @@ public class LogItem {
 	public String dateSt;
 	private Date dateTime;
 	String logLevel;
+	public int nbLines;
 
 	/** normal way to collect the information */
 	final StringBuffer content = new StringBuffer();
@@ -231,6 +232,8 @@ public class LogItem {
 		processDefinitionId = searchLong("PROCESS_DEFINITION_ID", completeContentSt);
 		flowNodeDefinitionId = searchLong("PROCESS_DEFINITION_ID", completeContentSt);
 		processInstanceId = searchLong("PROCESS_INSTANCE_ID", completeContentSt);
+		if (processInstanceId==null)
+			processInstanceId = searchLong("processInstanceId", completeContentSt);
 		rootProcessInstanceId = searchLong("ROOT_PROCESS_INSTANCE_ID", completeContentSt);
 		connectorImplementationClassName = searchString("CONNECTOR_IMPLEMENTATION_CLASS_NAME", completeContentSt);
 		processDefinitionName = searchString("PROCESS_NAME", completeContentSt);
@@ -250,6 +253,22 @@ public class LogItem {
 			else
 				causedBy = completeContent.substring(pos, posEndLine);
 		}
+		else
+		{
+			// format is 
+		
+			// 2018-02-01 10:55:05.291 -0500 SEVERE: org.bonitasoft.engine.execution.work.FailureHandlingBonitaWork THREAD_ID=446503 | HOSTNAME=fldlpdelba003 | TENANT_ID=1 | Unable to handle the failure.
+			// 2018-02-01 09:13:44.715 -0500 SEVERE: org.bonitasoft.engine.execution.work.FailureHandlingBonitaWork THREAD_ID=445949 | HOSTNAME=fldlpdelba003 | TENANT_ID=1 | org.bonitasoft.engine.expression.exception.SExpressionEvaluationException : "PROCESS_DEFINITION_ID=6207137492058794890 | PROCESS_NAME=FDR_Ping_Pool | PROCESS_VERSION=1.0.0.7 | PROCESS_INSTANCE_ID=129915 | ROOT_PROCESS_INSTANCE_ID=129912 | FLOW_NODE_DEFINITION_ID=8021353421732438797 | FLOW_NODE_INSTANCE_ID=1032623 | FLOW_NODE_NAME=Ping BHR | CONNECTOR_IMPLEMENTATION_CLASS_NAME=RestConnector | CONNECTOR_INSTANCE_ID=562562 | org.bonitasoft.engine.data.instance.exception.SDataInstanceNotFoundException: org.bonitasoft.engine.commons.exceptions.SObjectNotFoundException: org.bonitasoft.engine.core.process.instance.api.exceptions.SFlowNodeNotFoundException: Flow node instance with id 1032616 not found"
+			// 2018-02-01 23:59:20.960 -0500 SEVERE: org.bonitasoft.engine.scheduler.impl.BonitaJobStoreCMT Couldn't rollback jdbc connection. Closed Connection
+
+			// in this situation, take the last causeBy
+			StringTokenizer st = new StringTokenizer(completeContent.toString(), "|");
+			while (st.hasMoreTokens())
+				causedBy = st.nextToken();
+			
+			
+		}
+			
 	}
 
 	public boolean isError() {

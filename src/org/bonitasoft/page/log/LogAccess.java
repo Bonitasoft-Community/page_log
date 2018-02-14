@@ -80,6 +80,8 @@ public class LogAccess {
 		 */
 		public boolean enableAnalysisError;
 
+		public boolean analysisCompactBasedOnError;
+		
 		public List<String> zipanddownload;
 
 		public String getFileName() {
@@ -109,7 +111,8 @@ public class LogAccess {
 			logParameter.brutResult = Toolbox.getBoolean(jsonHash.get("brutResult"), false);
 			logParameter.fileName = (String) jsonHash.get("fileName");
 			logParameter.pathName = (String) jsonHash.get("pathName");
-
+			logParameter.analysisCompactBasedOnError = Toolbox.getBoolean(jsonHash.get("analysisCompactBasedOnError"), false);
+			
 			logParameter.filterError = Toolbox.getBoolean(jsonHash.get("filterError"), false);
 			logParameter.filterText = (String) jsonHash.get("filterText");
 			if (logParameter.filterText != null && logParameter.filterText.trim().length() == 0) {
@@ -454,7 +457,7 @@ public class LogAccess {
 				logInformation.addLogItem(currentLogItem);
 			}
 
-			logInformation.end();
+			logInformation.end( lineNumber );
 
 			if (errorDuringDecodage != null) {
 				logInformation.listEvents.add(errorDuringDecodage);

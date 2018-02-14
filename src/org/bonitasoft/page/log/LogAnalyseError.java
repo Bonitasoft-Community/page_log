@@ -1,11 +1,14 @@
 package org.bonitasoft.page.log;
 
+import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.bonitasoft.page.log.LogAccess.LogParameter;
 
 /* ******************************************************************************** */
 /*                                                                                  */
@@ -18,7 +21,8 @@ public class LogAnalyseError {
 
 	private String logFileName;
 	private boolean enableAnalysis;
-
+	private boolean analysisCompactBasedOnError;
+	
 	public class AnalyseItem {
 		public int count = 0;
 		public LogItem logItem;
@@ -37,9 +41,16 @@ public class LogAnalyseError {
 
 		private boolean tooMuchErrors = false;
 		private int nbErrorsDetected = 0;
+		private int nbDifferentErrorsDetected=0;
 		private final static int maxErrorSynthese = 2000;
 
+		private long timeAnalysisInms;
+		private long nbLogItems;
+		private long nbTotalLines;
+		
 		public Map<String, Object> toJson() {
+			DecimalFormat myFormatter = new DecimalFormat("###,###,###,###,###,###,###");
+			
 			Map<String, Object> result = new HashMap<String, Object>();
 			List<Map<String, Object>> listSynthese = new ArrayList<Map<String, Object>>();
 			result.put("synthese", listSynthese);
@@ -64,22 +75,55 @@ public class LogAnalyseError {
 			}
 			result.put("tooMuchErrors", tooMuchErrors);
 			result.put("maxErrors", maxErrorSynthese);
+			result.put("timeAnalysisInSec", timeAnalysisInms / 1000);
+			result.put("nbLogItems", nbLogItems);
+			result.put("nbLogItemsSt", myFormatter.format(nbLogItems));
+			result.put("nbTotalLines", nbTotalLines);
+			result.put("nbTotalLinesSt", myFormatter.format(nbTotalLines));
+				  
 
 			result.put("nbErrorsDetected", nbErrorsDetected);
+			result.put("nbDifferentErrorsDetected", nbDifferentErrorsDetected);
 
 			return result;
 		}
 
 		public void add(LogItem logItem) {
-			String key = logItem.processDefinitionId + "#" + logItem.flowNodeDefinitionId + "#" + logItem.connectorImplementationClassName + "#" + logItem.causedBy;
-			if (logItem.processDefinitionId == null)
-				key = logItem.getHeader();
+			nbLogItems++;
+			
+			
+			String key ;
+			if (analysisCompactBasedOnError)
+			{
+				if (logItem.causedBy !=null)	
+				{
+					// search the first : 
+					int pos = logItem.causedBy.indexOf(":");
+					if (pos!=-1)
+						key=logItem.causedBy.substring(0,pos);
+					else
+						key=logItem.causedBy.length()>100 ? logItem.causedBy.substring(0,100): logItem.causedBy;
+				}
+				else
+					key = logItem.getHeader();
+			}
+			else
+			{
+				key = logItem.processDefinitionId + "#" + logItem.flowNodeDefinitionId + "#" + logItem.connectorImplementationClassName + "#" + logItem.causedBy;
+			
+				if (logItem.processDefinitionId == null)
+					key = logItem.getHeader();
+			}
+			nbErrorsDetected++;
 			if (!mapSynthese.containsKey(key)) {
-				nbErrorsDetected++;
+				nbDifferentErrorsDetected++;
 				// protect the server : if there are too much error, stop
 				// recorded it
 				if (mapSynthese.size() > maxErrorSynthese)
+				{
 					tooMuchErrors = true;
+					return;
+				}
 				else
 					mapSynthese.put(key, new AnalyseItem(logItem));
 			}
@@ -144,9 +188,10 @@ public class LogAnalyseError {
 	 * @param logFileName
 	 * @param enableAnalysis
 	 */
-	public LogAnalyseError(String logFileName, boolean enableAnalysis) {
-		this.logFileName = logFileName;
-		this.enableAnalysis = enableAnalysis;
+	public LogAnalyseError(LogParameter logParameter) {
+		this.logFileName = logParameter.fileName;
+		this.enableAnalysis = logParameter.enableAnalysisError;
+		this.analysisCompactBasedOnError = logParameter.analysisCompactBasedOnError;
 	}
 
 	/* ********************************************************************* */
@@ -158,6 +203,10 @@ public class LogAnalyseError {
 
 	private LogItem currentLogItem;
 
+	/**
+	 * 
+	 * @param logItem
+	 */
 	public void analyse(LogItem logItem) {
 		if (!enableAnalysis)
 			return;
@@ -178,22 +227,30 @@ public class LogAnalyseError {
 					return; // same starter, in less than 1 seconds : consider
 							// as the same error in fact
 				}
-			} else {
-				// errors are too different, this is an another one
-				doAnalysis(currentLogItem);
-				currentLogItem = logItem;
 			}
-
+			// errors are too different, this is an another one
+			doAnalysis(currentLogItem);
+			currentLogItem = logItem;
 		} else
 			currentLogItem = logItem;
 
 	}
 
-	public void end() {
+	/**
+	 * 
+	 * @param nbTotalLines
+	 */
+	public void end(long nbTotalLines) {
 		if (currentLogItem != null)
 			doAnalysis(currentLogItem);
+		analysisSynthese.nbTotalLines= nbTotalLines;
 	}
 
+	
+	public void setTimeInMs( long timeAnalyseInMs)
+	{
+		analysisSynthese.timeAnalysisInms = timeAnalyseInMs;		
+	}
 	/**
 	 * do an analysis on the item
 	 * 
