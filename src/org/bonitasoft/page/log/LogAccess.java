@@ -338,7 +338,9 @@ public class LogAccess {
 			LogItem currentLogItem = null;
 			FormatLog formatLog = new FormatLog();
 			String detectDate = null;
-
+			
+			
+			logInformation.start();
 			br = new BufferedReader(new FileReader(logInformation.completeLogFileName));
 
 			String line = br.readLine();
@@ -691,6 +693,8 @@ public class LogAccess {
 		return formatLog;
 	}
 
+   
+
 	/**
 	 * detectFormat
 	 *
@@ -708,21 +712,32 @@ public class LogAccess {
 			formatLog.formatLineLog = FormatLineLog.TWOLINES;
 			return formatLog;
 		}
-		final String level = line.substring(formatLog.posEndDate, posLevel);
+		String level = line.substring(formatLog.posEndDate, posLevel);
 
 		// if the text is somethink like INFO, INFOS: SEVERE then this is a
 		// level.
-		// how to detect it ? Let's say if this is a word in UPPER CASE, this is
+		// how to detect it ? Let's detect if this is a INFO, WARNING... if this is a word in UPPER CASE, this is
 		// a level.
-		if (level.equals(level.toUpperCase()))
-			formatLog.formatLineLog = FormatLineLog.ONELINE;
+		if (level.endsWith(":"))
+		  level=level.substring(0,level.length()-1);
+		level = level.toUpperCase();
+		if (LogInformation.listWarnings.contains( level)
+		    || LogInformation.listErrors.contains( level )
+        || LogInformation.listInfos.contains( level )
+        || LogInformation.listDebugs.contains( level )
+		     )
+      formatLog.formatLineLog = FormatLineLog.ONELINE;
 		else
-			formatLog.formatLineLog = FormatLineLog.TWOLINES;
+		  formatLog.formatLineLog = FormatLineLog.TWOLINES;
+		 
+		
+		
 		return formatLog;
 	}
 
 	/**
-	 *
+	 * decode the line according the ONELINE or TWOLINES policy
+	 * Nota: the synthesis (error ? ...) will be done during the Loginformation.addLogItem() method
 	 */
 	private static void decodeLine(final FormatLog formatLog, final LogItem logItem, final String line) {
 		// TWOLINES:

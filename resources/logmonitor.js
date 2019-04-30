@@ -35,8 +35,8 @@ appCommand.controller('LogControler',
 	{
 		var self=this;
 		self.wait = true;
-		
-		$http.get( '?page=custompage_log&action=getFilesLog' )
+		var d = new Date();
+		$http.get( '?page=custompage_log&action=getFilesLog&t='+d.getTime() )
 				.success( function ( jsonResult ) {
 					self.listfileslog 	= jsonResult.listfileslog;
 					self.logpath 		= jsonResult.logpath;
@@ -97,9 +97,10 @@ appCommand.controller('LogControler',
 		self.refreshisrunning=true;
 		
 		var json= encodeURI( angular.toJson(this.display, true));
-
+		var d = new Date();
 		
-		$http.get( '?page=custompage_log&action=getLog&paramjson='+json )
+		
+		$http.get( '?page=custompage_log&action=getLog&paramjson='+json+'&t='+d.getTime() )
 				.success( function ( jsonResult ) {
 					self.listLogItems 					= jsonResult.listLogItems;
 					self.analysisSynthese               = jsonResult.analysisSynthese;
@@ -124,7 +125,8 @@ appCommand.controller('LogControler',
 
 	this.refresh=function()
 	{
-		this.getFileLog( this.logFileName );
+		console.log("Refresh");
+		this.callGetLog( this.logFileName );
 	}
 
 	

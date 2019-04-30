@@ -15,8 +15,11 @@ import org.bonitasoft.page.log.LogAccess.LogParameter;
  */
 public class LogInformation {
 	public static Set<String> listWarnings = new HashSet<String>(Arrays.asList("WARNING", "WARN", "GRAVE", "AVERTISSEMENT"));
-	public static Set<String> listErrors = new HashSet<String>(Arrays.asList("SEVERE", "ERROR"));
-
+	public static Set<String> listErrors = new HashSet<String>(Arrays.asList("SEVERE", "ERROR", "FATAL"));
+  public static Set<String> listInfos = new HashSet<String>(Arrays.asList("INFO", "INFOS", "CONFIG"));
+  public static Set<String> listDebugs = new HashSet<String>(Arrays.asList("DEBUG", "TRACE", "TRACE_INT", "X_TRACE_INT"));
+  
+     
 	/**
 	 * keep this information to use the filter
 	 */
@@ -56,6 +59,17 @@ public class LogInformation {
 		this.startTime = System.currentTimeMillis();
 	}
 
+	/**
+	 * the previous LogItem is explode at the analysis time. We may have for one error, multiple log : so, we have to detect this group, to keep only one error in fact.
+	 * 
+	 */
+	private LogItem previousLogItem=null;
+	
+	
+	public void start()
+	{
+	  logAnalyseError.startAnalyse();
+	}
 	/*
 	 * *************************************************************************
 	 * *******
@@ -76,7 +90,7 @@ public class LogInformation {
 		 * "] **** Last is*****[" + listLogs.get(listLogs.size() - 1).toString()
 		 * + "] *****Current***** " + logItem.toString()); }
 		 */
-		logAnalyseError.analyse(logItem);
+		logAnalyseError.analyse( logItem);
 		if (!keepTheLine(logItem)) {
 			// logger.info("Not keep the line " + logItem.lineNumber);
 			return;
@@ -104,6 +118,7 @@ public class LogInformation {
 		} else {
 			listLogs.add(logItem);
 		}
+		previousLogItem = logItem;
 	}
 
 	/**
@@ -112,7 +127,7 @@ public class LogInformation {
 	 */
 	public void end( long nbTotalLines) {
 		this.nbTotalLines= nbTotalLines;
-		logAnalyseError.end(nbTotalLines );
+		logAnalyseError.endAnalysis(nbTotalLines );
 		logAnalyseError.setTimeInMs( System.currentTimeMillis() - startTime);
 	}
 	/*

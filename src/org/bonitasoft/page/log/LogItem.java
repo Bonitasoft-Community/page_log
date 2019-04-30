@@ -22,7 +22,7 @@ public class LogItem {
 	public long lineNumber;
 	public String dateSt;
 	private Date dateTime;
-	String logLevel;
+	String logLevel=null;
 	public int nbLines;
 
 	/** normal way to collect the information */
@@ -95,10 +95,21 @@ public class LogItem {
 
 	}
 
-	public void setLevel(final String level) {
-		logLevel = level == null ? "" : level.trim();
-		if (level.endsWith(":")) {
-			logLevel = logLevel.substring(0, logLevel.length() - 1);
+	public void setLevel(String level) {
+		if (logLevel==null)
+		{
+	    level = level == null ? "" : level.trim();
+	    if (level.endsWith(":")) {
+	      level = level.substring(0, level.length() - 1);
+
+	      // maybe a new level ?
+		  if (LogInformation.listWarnings.contains(level) 
+		      || LogInformation.listErrors.contains(level)
+		      || LogInformation.listInfos.contains(level)
+        || LogInformation.listDebugs.contains(level))
+		    logLevel = level;
+		  
+		}
 		}
 	}
 
@@ -161,8 +172,8 @@ public class LogItem {
 			if (pos != -1)
 				header = header.substring(pos + 1);
 		}
-		if (header.length() > 200)
-			return header.substring(0, 200);
+		if (header.length() > 300)
+			return header.substring(0, 300);
 		return header;
 	}
 

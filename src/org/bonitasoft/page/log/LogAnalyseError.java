@@ -201,38 +201,70 @@ public class LogAnalyseError {
 	/*                                                                                  */
 	/* ********************************************************************* */
 
-	private LogItem currentLogItem;
+	private LogItem previousLogItem=null;
 
 	/**
-	 * 
+	 * start the analysis
+	 */
+	public void startAnalyse()
+	{
+	  previousLogItem=null;
+	}
+	/**
+	 * Analysis. The analysis need the previous logItem to see if the previous is linked to the current one, in order to report only one error
+	 * In Bonita, one Error generate a lot of ERROR message in the log.
 	 * @param logItem
 	 */
 	public void analyse(LogItem logItem) {
-		if (!enableAnalysis)
+		if (!enableAnalysis || logItem ==null)
 			return;
 		// 1. multiple logItem can be group as the same errors in fact (Bonita
 		// produce the same error on multiple line).
 		// in that circonstance, we keep only the first logItem
 		if (!logItem.isError()) {
-			doAnalysis(currentLogItem);
-			currentLogItem = null;
+		  // is a previousLogItem is waiting ? So time to analysis it.
+		  if (previousLogItem!=null)
+		  {
+		    doAnalysisError(previousLogItem);
+		    previousLogItem=null;
+		  }
 			return;
 		}
-		if (currentLogItem != null) {
-			// is attached ?
-			if (logItem.getTime() - currentLogItem.getTime() < 1000) {
-				if (logItem.getFirstWord(2).equals(currentLogItem.getFirstWord(2))) {
-					currentLogItem.link(logItem);
+		
+		// no previous error : let's register it, and wait for the next one
+		if (previousLogItem==null)
+		{
+      previousLogItem = logItem;
+      return;
+		}
+		
+		// is the log item is attached to the previous one ?
+		// the point is Bonita does not normalize the error message :-O and, for one error, log a lot of Error message.
+		// how can we detect this is one Error ? 
+		// 2 logs must be close in time
+		// if they start by the same 2 first word, they shoud be the same error	
+		// BUT if the content are identical, it should be a different error
+		// 2019-04-23 07:56:18.095 +0200 org.apache.catalina.core.ContainerBase.[Catalina].[localhost].[/bonita].[CustomPageServlet] org.apache.catalina.core.StandardWrapperValve invoke 
+		// 		  GRAVE: Servlet.service() for servlet [CustomPageServlet] in context with path [/bonita] threw exception [USERNAME=V004476 | Unable to find page with name: theme] with root cause
+		//		  javax.servlet.ServletException: USERNAME=V004476 | Unable to find page with name: theme
 
-					return; // same starter, in less than 1 seconds : consider
-							// as the same error in fact
-				}
-			}
+		if (logItem.getTime() - previousLogItem.getTime() < 1000) 
+		  if (logItem.getFirstWord(2).equals(previousLogItem.getFirstWord(2))) 
+		    
+		    // hum, let do a last think : if the 2 contents are completely indentical, this is a different error in fact !
+		    if (! logItem.getHeader().equals(previousLogItem.getHeader())) {
+		      // ok, consider the two are linked, register it, wait the next one.
+		      previousLogItem.link(logItem);
+		      return;
+		    }
+				
+			
 			// errors are too different, this is an another one
-			doAnalysis(currentLogItem);
-			currentLogItem = logItem;
-		} else
-			currentLogItem = logItem;
+		
+		// analysis the previous one, register the new one and wait
+		doAnalysisError(previousLogItem);
+		previousLogItem = logItem;
+			
 
 	}
 
@@ -240,9 +272,12 @@ public class LogAnalyseError {
 	 * 
 	 * @param nbTotalLines
 	 */
-	public void end(long nbTotalLines) {
-		if (currentLogItem != null)
-			doAnalysis(currentLogItem);
+	public void endAnalysis(long nbTotalLines) {
+		if (previousLogItem != null)
+		{
+		  doAnalysisError(previousLogItem);
+			previousLogItem=null;
+		}
 		analysisSynthese.nbTotalLines= nbTotalLines;
 	}
 
@@ -252,12 +287,12 @@ public class LogAnalyseError {
 		analysisSynthese.timeAnalysisInms = timeAnalyseInMs;		
 	}
 	/**
-	 * do an analysis on the item
+	 * do an analysis on the item. Check is the 
 	 * 
 	 * @param logItem
 	 */
-	private void doAnalysis(LogItem logItem) {
-		if (logItem == null)
+	private void doAnalysisError(LogItem logItem) {
+		if (logItem == null || ! logItem.isError())
 			return;
 		// here, we have to
 		// ok, we considere this is a new error. Register it ?
