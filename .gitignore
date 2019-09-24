@@ -1,0 +1,39 @@
+/target/
+
+\.settings/org\.eclipse\.jdt\.core\.prefs
+
+\.settings/org\.eclipse\.m2e\.core\.prefs
+
+bin/org/bonitasoft/log/LogAccess\.class
+
+bin/org/bonitasoft/log/LogAccess\$LogItem\.class
+
+release/1\.0/custompage_itsASuprise\.renametozip
+
+release/1\.0/custompage_log\.zip
+
+release/1\.1/custompage_log\.zip
+
+release/1\.2/custompage_log\.zip
+
+release/1\.3/custompage_log\.zip
+
+release/2\.0/custompage_log 2017111\.zip
+
+release/2\.0/custompage_log 20171114\.zip
+
+release/2\.1/custompage_log\.zip
+
+release/2\.2/custompage_log\.zip
+
+release/2\.3/custompage_log 20180213\.zip
+
+release/2\.4/custompage_log\.zip
+
+\.classpath
+
+\.lastupdate
+
+\.project
+
+release/2.4/custompage_log_2_4.zip
