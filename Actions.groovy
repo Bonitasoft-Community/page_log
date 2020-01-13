@@ -119,6 +119,7 @@ public class Actions {
 				actionAnswer.isManaged=true;
 				response.addHeader("content-disposition", "attachment; filename=LogFiles.zip");
 	            response.addHeader("content-type", "application/zip");
+                 
 	            OutputStream output = response.getOutputStream();
 	            logger.info("#### log:Actions ZipAndDownload JSON=["+paramJsonSt+"]");
 	 			
