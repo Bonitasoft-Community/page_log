@@ -17,7 +17,7 @@ public class LogInformation {
 	public static Set<String> listWarnings = new HashSet<String>(Arrays.asList("WARNING", "WARN", "GRAVE", "AVERTISSEMENT"));
 	public static Set<String> listErrors = new HashSet<String>(Arrays.asList("SEVERE", "ERROR", "FATAL"));
   public static Set<String> listInfos = new HashSet<String>(Arrays.asList("INFO", "INFOS", "CONFIG"));
-  public static Set<String> listDebugs = new HashSet<String>(Arrays.asList("DEBUG", "TRACE", "TRACE_INT", "X_TRACE_INT"));
+  public static Set<String> listDebugs = new HashSet<String>(Arrays.asList("DEBUG", "TRACE", "TRACE_INT", "X_TRACE_INT", "FINE"));
   
      
 	/**
