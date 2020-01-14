@@ -45,7 +45,7 @@
 
 	<center>
 	<table>
-		<tr><td><h1>Logs on server</h1></td><td style="font-size:0.8em;vertical-align:bottom"> V2.4</span></td>
+		<tr><td><h1>Logs on server</h1></td><td style="font-size:0.8em;vertical-align:bottom"> V2.5</span></td>
 		</tr>
 	</table>
 	</center>
@@ -55,35 +55,46 @@
 	<div class="row">
 
 		<div class="col-xs-12">
-			<div class="bs-component"  ng-controller="LogControler as logctrl">
-				<legend class="text-primary"><span class="glyphicon glyphicon-th"></span>
-					<a href="#" ng-click="logctrl.display.showLogs = ! logctrl.display.showLogs" style="text-decoration:none">					
-			  				<span ng-show="logctrl.display.showLogs" class="glyphicon glyphicon-chevron-down" style="font-size: 18px;"></span>
-		  				</a>
-						<a href="#" ng-click="logctrl.display.showLogs = ! logctrl.display.showLogs" style="text-decoration:none">					
-							<span ng-show="! logctrl.display.showLogs" class="glyphicon glyphicon-chevron-right"  style="font-size: 18px;"></span>
-						</a>				
-					Files
-				</legend>
+			<div class="bs-component"  ng-controller="LogControler as ctrl">
+			
+				<ul class="nav nav-tabs"  ng-class="{'nav-stacked': vertical, 'nav-justified': justified}" style="border-bottom: 1px solid #c2c2c2;">
+					<li ng-class="{active: active, disabled: false}" id="form-tab" heading="logContent" active="true" title="Display the log file" select="ctrl.navbaractiv == 'logContent'" class="{{ctrl.getNavClass('logContent')}}" style="{{ctrl.getNavStyle('logContent')}}">
+						  <a ng-click="ctrl.navbaractiv = 'logContent';"   class="ng-binding">Log</a>
+					</li>
+					<li ng-class="{active: active, disabled: false}" id="form-tab" heading="logFile" active="true" title="Select log file" select="ctrl.navbaractiv == 'logFile'" class="{{ctrl.getNavClass('logFile')}}" style="{{ctrl.getNavStyle('logFile')}}">
+						  <a  ng-click="ctrl.navbaractiv='logFile'"  class="ng-binding">Select Log File</a>
+					</li>
+					<li ng-class="{active: active, disabled: false}" id="form-tab" heading="ErrorAnalysis" active="true" title="Error Analysis" select="ctrl.navbaractiv == 'ErrorAnalysis'" class="{{ctrl.getNavClass('ErrorAnalysis')}}" style="{{ctrl.getNavStyle('ErrorAnalysis')}}">
+						  <a  ng-click="ctrl.navbaractiv='ErrorAnalysis'" class="ng-binding">Error Analysis</a>
+					</li>					
+					
+				</ul>
+			
+				<!--  ************************************************************  -->	
+				<!--  Log files		 										-->
+				<!--  ************************************************************  -->		
+				<!-- Keep it ng-show, else the file drop will not work ! -->	
+			
+
 				
-				<div class="panel panel-primary" ng-show="logctrl.display.showLogs">
-					Log Path : <span ng-repeat="path in logctrl.logpath track by $index">{{path}},&nbsp;&nbsp;</span><p>
+				<div class="panel panel-primary" ng-show="ctrl.navbaractiv=='logFile'">
+					Log Path : <span ng-repeat="path in ctrl.logpath track by $index">{{path}},&nbsp;&nbsp;</span><p>
 			
 					<div class="explanation">
 					All logs files found in the directory are display. Clicks on one to see its content.
 					</div>
 					
 					
-					<button ng-click="logctrl.getAllFilesLog()" class="btn btn-success btn-xs">&nbsp;Refresh&nbsp;</button><p>
+					<button ng-click="ctrl.getAllFilesLog()" class="btn btn-warning btn-xs">&nbsp;Refresh&nbsp;</button><p>
 
-					<button ng-click="logctrl.getCurrentLog()" class="btn btn-info btn-xs">Current log</button>
+					<button ng-click="ctrl.getCurrentLog();ctrl.navbaractiv='logFile'" class="btn btn-info btn-xs">Current log</button>
 
 					<table class="table table-striped table-hover table-condensed" > <!--  style="background-color:#C49E71" -->
 					
-						<tr ng-repeat="(key, val) in logctrl.listfileslog track by $index">
-							<td><input type="checkbox" ng-model="logctrl.listfilesselected[ key ]" title="All files on the {{key}} are selected, then ask the download">&nbsp;&nbsp;{{key}}</input></td>
+						<tr ng-repeat="(key, val) in ctrl.listfileslog track by $index">
+							<td><input type="checkbox" ng-model="ctrl.listfilesselected[ key ]" title="All files on the {{key}} are selected, then ask the download">&nbsp;&nbsp;{{key}}</input></td>
 							<td ng-repeat="logfile in val track by $index">
-								<button ng-click="logctrl.getLog( logfile )" class="btn btn-info btn-xs" title="{{logfile.completeFileName}}">&nbsp;{{logfile.fileName}}&nbsp;</button>
+								<button ng-click="ctrl.getLog( logfile );ctrl.navbaractiv='logFile'" class="{{ctrl.getClassLogFile(logfile.fileName)}}" title="{{logfile.completeFileName}}">&nbsp;{{logfile.fileName}}&nbsp;</button>
 								&nbsp;&nbsp;
 							
 							</td>
@@ -93,21 +104,33 @@
 					<table>
 					<tr>
 						<td style="padding: 20px">
-							<button ng-click="logctrl.getCurrentLog()" class="btn btn-info btn-xs">Current log</button>
+							<button ng-click="ctrl.getCurrentLog();ctrl.navbaractiv='logFile'" class="btn btn-info btn-xs">Current log</button>
 						</td>
 						<td style="padding: 20px">
-	 						<a  class="btn btn-primary" href="?page=custompage_log&action=zipanddownload&paramjson={{logctrl.getDowloadFile()}}">Zip and Download</a>	 						
+	 						<a  class="btn btn-primary" href="?page=custompage_log&action=zipanddownload&paramjson={{ctrl.getDowloadFile()}}">Zip and Download</a>	 						
 	 						</td>
 					</table>
 					
 					
 				</div>
 					
-				<legend class="text-primary"><span class="glyphicon glyphicon-th"></span>Log</legend>
-				<div class="panel panel-primary">
+				<!--  ************************************************************  -->	
+				<!--  Log Content		 										-->
+				<!--  ************************************************************  -->		
+				<!-- Keep it ng-show, else the file drop will not work ! -->
+				
+				<div class="panel panel-primary" ng-show="ctrl.navbaractiv=='logContent'">
 					
+					<a href="#" ng-click="ctrl.display.showSettings = ! ctrl.display.showSettings" style="text-decoration:none">					
+			  							<span ng-show="ctrl.display.showSettings" class="glyphicon glyphicon-chevron-down" style="font-size: 18px;"></span>
+		  							</a>
+									<a href="#" ng-click="ctrl.display.showSettings = ! ctrl.display.showSettings" style="text-decoration:none">					
+										<span ng-show="! ctrl.display.showSettings" class="glyphicon glyphicon-chevron-right"  style="font-size: 18px;"></span>
+									</a>	
+						Settings <div  class="btn btn-info btn-xs">{{ctrl.logFileName}}</div>
+						
 					
-					<table>
+					<table ng-if="ctrl.display.showSettings">
 					<tr>
 						<td style="padding:20px;vertical-align:top">
 							<div class="paneldd panel-primary">
@@ -115,21 +138,21 @@
 							 		File
 							 	</div>
 							 	<div class="panel-body">
-								 	<span ng-show="logctrl.wait">
+								 	<span ng-show="ctrl.wait">
 										<span class="Loading" >.</span> Loading...
 									</span>
-									Log file : <div  class="btn btn-info btn-xs">{{logctrl.logFileName}}</div><p>
+									Log file : <div  class="btn btn-info btn-xs">{{ctrl.logFileName}}</div><p>
 				
-									<span ng-show="logctrl.wait"><span class="Loading" >.</span> Loading...</span>									
-									<button ng-click="logctrl.refresh()" class="btn btn-success btn-xs">Refresh</button>
+									<span ng-show="ctrl.wait"><span class="Loading" >.</span> Loading...</span>									
+									<button ng-click="ctrl.refresh()" class="btn btn-warning btn-xs">Refresh</button>
 										
 									<table id='maintimer' class="maintimercls">
 									<tr>
 										<td style="padding:10px">	
-											<input type="checkbox" ng-model="logctrl.display.filterAutomaticRefresh" ng-change="logctrl.changeTimer()">AutomaticRefresh </input>
+											<input type="checkbox" ng-model="ctrl.display.filterAutomaticRefresh" ng-change="ctrl.changeTimer()">AutomaticRefresh </input>
 										</td>
 										<td style="padding:10px">
-											<input type="checkbox" ng-model="logctrl.display.filterTail" >Tail</input>
+											<input type="checkbox" ng-model="ctrl.display.filterTail" >Tail</input>
 										</td>
 									</tr>
 									</table>
@@ -145,14 +168,14 @@
 							 	<div class="panel-body">
 									<table>
 									<tr>
-										<td style="padding:10px"><input type="checkbox" ng-model="logctrl.display.filterError" ng-disabled="logctrl.display.brutResult">Only error & warm</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="logctrl.display.enableAnalysisError" ng-disabled="logctrl.display.brutResult">Analyse Errors</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="logctrl.display.filterShortDate" ng-disabled="logctrl.display.brutResult">Short Date</input></td>
-										<td>Filter text : <input type="input" ng-model="logctrl.display.filterText" ng-disabled="logctrl.display.brutResult"></input></td>												
+										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.filterError" ng-disabled="ctrl.display.brutResult">Only error & warm</input></td>
+										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.enableAnalysisError" ng-disabled="ctrl.display.brutResult">Analyse Errors</input></td>
+										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.filterShortDate" ng-disabled="ctrl.display.brutResult">Short Date</input></td>
+										<td>Filter text : <input type="input" ng-model="ctrl.display.filterText" ng-disabled="ctrl.display.brutResult"></input></td>												
 									</tr>
 									</table>
-									<span ng-show="logctrl.wait"><span class="Loading" >.</span> Loading...</span>									
-									<button ng-click="logctrl.refresh()" class="btn btn-success btn-xs">Refresh</button>
+									<span ng-show="ctrl.wait"><span class="Loading" >.</span> Loading...</span>									
+									<button ng-click="ctrl.refresh()" class="btn btn-warning btn-xs">Refresh</button>
 
 									
 								</div>
@@ -165,13 +188,13 @@
 							 	</div>
 							 	<div class="panel-body">						
 									<table>
-									<tr><td style="padding:10px"><input type="checkbox" ng-model="logctrl.display.brutResult" ng-change="logctrl.refresh()">Brut</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="logctrl.display.showLine">Line</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="logctrl.display.showDate">Date</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="logctrl.display.showLevel">Level</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="logctrl.display.showContent">Content</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="logctrl.display.showLocalisation">Localisation</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="logctrl.display.showCompact">Compact</input></td>						
+									<tr><td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.brutResult" ng-change="ctrl.refresh()">Brut</input></td>
+										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.showLine">Line</input></td>
+										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.showDate">Date</input></td>
+										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.showLevel">Level</input></td>
+										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.showContent">Content</input></td>
+										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.showLocalisation">Localisation</input></td>
+										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.showCompact">Compact</input></td>						
 									</tr>
 									</table>
 								</div>
@@ -183,32 +206,26 @@
 					
 					<!-- LOG DETAILS -->
 				 	
-					<h3><a href="#" ng-click="logctrl.display.showAllLines = ! logctrl.display.showAllLines" style="text-decoration:none">					
-			  							<span ng-show="logctrl.display.showAllLines" class="glyphicon glyphicon-chevron-down" style="font-size: 18px;"></span>
-		  							</a>
-									<a href="#" ng-click="logctrl.display.showAllLines = ! logctrl.display.showAllLines" style="text-decoration:none">					
-										<span ng-show="! logctrl.display.showAllLines" class="glyphicon glyphicon-chevron-right"  style="font-size: 18px;"></span>
-									</a>	
-						Logs details</h3>							
-					<div ng-show="logctrl.display.showAllLines"	>
+							
+					<div>
 					<!-- pagination -->
 				 	
 					<table>
 					<tr>
 						<td>Nb lines per pages : 
-							<select ng-model="logctrl.display.numberperpage" ng-change="logctrl.refresh()">						
+							<select ng-model="ctrl.display.numberperpage" ng-change="ctrl.refresh()">						
 								<option value="100">100</option>
 								<option value="200">200</option>
 								<option value="500">500</option>
 							</select>
 							&nbsp;
 						</td><td>
-							<pagination ng-model="logctrl.display.pagenumber" 
-								total-items="logctrl.display.totalLines" 
-								items-per-page="logctrl.display.numberperpage"
-							ng-click="logctrl.refresh()">
+							<pagination ng-model="ctrl.display.pagenumber" 
+								total-items="ctrl.display.totalLines" 
+								items-per-page="ctrl.display.numberperpage"
+							ng-click="ctrl.refresh()">
 							</pagination>														
-							Number of lines : {{logctrl.display.totalLines}}
+							Number of lines : {{ctrl.display.totalLines}}
 							
 						</td>
 					</tr>					
@@ -218,65 +235,72 @@
 										
 					<table class="table table-striped table-hover table-condensed" > <!--  style="background-color:#C49E71" -->
 						<tr>
-							<th ng-show="logctrl.display.brutResult">Log</th>
+							<th ng-show="ctrl.display.brutResult">Log</th>
 	
-							<th ng-show="! logctrl.display.brutResult && logctrl.display.showLine" >#</th>
-							<th ng-show="! logctrl.display.brutResult && logctrl.display.showDate">Date</th>
-							<th ng-show="! logctrl.display.brutResult && logctrl.display.showLevel">Level</th>
-							<th ng-show="! logctrl.display.brutResult && logctrl.display.showContent">Content</th>
-							<th ng-show="! logctrl.display.brutResult && logctrl.display.showLocalisation">Localisation</th>
+							<th ng-show="! ctrl.display.brutResult && ctrl.display.showLine" >#</th>
+							<th ng-show="! ctrl.display.brutResult && ctrl.display.showDate">Date</th>
+							<th ng-show="! ctrl.display.brutResult && ctrl.display.showLevel">Level</th>
+							<th ng-show="! ctrl.display.brutResult && ctrl.display.showContent">Content</th>
+							<th ng-show="! ctrl.display.brutResult && ctrl.display.showLocalisation">Localisation</th>
 	          
 						</tr>
-						<tr ng-repeat="logitem in logctrl.getPageResult() track by $index">
-							<td ng-show=" logctrl.display.brutResult" style="{{logctrl.getLineStyle(logitem)}}">{{logitem.l}}</td>
+						<tr ng-repeat="logitem in ctrl.getPageResult() track by $index">
+							<td ng-show=" ctrl.display.brutResult" style="{{ctrl.getLineStyle(logitem)}}">{{logitem.l}}</td>
 	
-							<td ng-show="! logctrl.display.brutResult && logctrl.display.showLine" style="{{logctrl.getLineStyle(logitem)}}">{{logitem.lin}}</td>
-							<td ng-show="! logctrl.display.brutResult && logctrl.display.showDate" style="{{logctrl.getLineStyle(logitem)}}">{{logitem.dte}}</td>
-							<td ng-show="! logctrl.display.brutResult && logctrl.display.showLevel"  style="{{logctrl.getLineStyle(logitem)}}">{{logitem.lvl}}</td>
-							<td ng-show="! logctrl.display.brutResult && logctrl.display.showContent" style="{{logctrl.getLineStyle(logitem)}}">{{logitem.cnt}}</td>
-							<td ng-show="! logctrl.display.brutResult && logctrl.display.showLocalisation" style="{{logctrl.getLineStyle(logitem)}}">{{logitem.loc}}</td>
+							<td ng-show="! ctrl.display.brutResult && ctrl.display.showLine" style="{{ctrl.getLineStyle(logitem)}}">{{logitem.lin}}</td>
+							<td ng-show="! ctrl.display.brutResult && ctrl.display.showDate" style="{{ctrl.getLineStyle(logitem)}}">{{logitem.dte}}</td>
+							<td ng-show="! ctrl.display.brutResult && ctrl.display.showLevel"  style="{{ctrl.getLineStyle(logitem)}}">{{logitem.lvl}}</td>
+							<td ng-show="! ctrl.display.brutResult && ctrl.display.showContent" style="{{ctrl.getLineStyle(logitem)}}">{{logitem.cnt}}</td>
+							<td ng-show="! ctrl.display.brutResult && ctrl.display.showLocalisation" style="{{ctrl.getLineStyle(logitem)}}">{{logitem.loc}}</td>
 	   					</tr>
 					</table>
 					<!-- pagination -->					
 					<table>
 					<tr>
 						<td>Nb lines per pages : 
-							<select ng-model="logctrl.display.numberperpage" ng-change="logctrl.refresh()">						
+							<select ng-model="ctrl.display.numberperpage" ng-change="ctrl.refresh()">						
 								<option value="100">100</option>
 								<option value="200">200</option>
 								<option value="500">500</option>
 							</select>
 							&nbsp;
 						</td><td>
-							<pagination ng-model="logctrl.display.pagenumber" 
-								total-items="logctrl.display.totalLines" 
-								items-per-page="logctrl.display.numberperpage"
-							ng-click="logctrl.refresh()">
+							<pagination ng-model="ctrl.display.pagenumber" 
+								total-items="ctrl.display.totalLines" 
+								items-per-page="ctrl.display.numberperpage"
+							ng-click="ctrl.refresh()">
 							</pagination>														
-							Number of lines : {{logctrl.display.totalLines}}
+							Number of lines : {{ctrl.display.totalLines}}
 						</td>
 					</tr>
 					</table>
 					</div>	
-					<span ng-show="logctrl.wait"><span class="Loading" >.</span> Loading...</span>									
-					<button ng-click="logctrl.refresh()" class="btn btn-success btn-xs">Refresh</button>
+					<span ng-show="ctrl.wait"><span class="Loading" >.</span> Loading...</span>									
+					<button ng-click="ctrl.refresh()" class="btn btn-warning btn-xs">Refresh</button>
+				</div>
+				
+				
+				<!--  ************************************************************  -->	
+				<!--  Error Analysis		 										-->
+				<!--  ************************************************************  -->		
+				<!-- Keep it ng-show, else the file drop will not work ! -->
 					
-					<h3>Error Analysis</h3>
-													
-					<input type="checkbox" ng-model="logctrl.display.analysisCompactBasedOnError">Analyze compact based on error type</input>				
+				<div class="panel panel-primary" ng-show="ctrl.navbaractiv=='ErrorAnalysis'">
+					<div  class="btn btn-info btn-xs">{{ctrl.logFileName}}</div><br>								
+					<input type="checkbox" ng-model="ctrl.display.analysisCompactBasedOnError">Analyze compact based on error type</input>				
 					<!-- CHART TIMELINE -->
 					
 					<div google-chart chart="analysisTimeLine" style="height: 200px; width: 100%; position: relative; "></div>
 								
 					
 					<!-- SYNTHESE -->
-					<div class="alert alert-danger" ng-show="{{logctrl.analysisSynthese.tooMuchErrors}}">Too much <b>different</b> errors arrived, only {{logctrl.analysisSynthese.maxErrors}} are saved</div>
-					<div class="alert alert-info" >{{logctrl.analysisSynthese.nbErrorsDetected}} total detected,
-								 {{logctrl.analysisSynthese.nbDifferentErrorsDetected}} different,
-								  {{logctrl.analysisSynthese.nbLogItemsSt}} log items,
-								  {{logctrl.analysisSynthese.nbTotalLinesSt}} lines,
-								  Analysed in {{logctrl.analysisSynthese.timeAnalysisInSec}} s,
-								 <div ng-show="logctrl.analysisSynthese.tooMuchErrors">Too much error </div></div>
+					<div class="alert alert-danger" ng-show="{{ctrl.analysisSynthese.tooMuchErrors}}">Too much <b>different</b> errors arrived, only {{ctrl.analysisSynthese.maxErrors}} are saved</div>
+					<div class="alert alert-info" >{{ctrl.analysisSynthese.nbErrorsDetected}} total detected,
+								 {{ctrl.analysisSynthese.nbDifferentErrorsDetected}} different,
+								  {{ctrl.analysisSynthese.nbLogItemsSt}} log items,
+								  {{ctrl.analysisSynthese.nbTotalLinesSt}} lines,
+								  Analysed in {{ctrl.analysisSynthese.timeAnalysisInSec}} s,
+								 <div ng-show="ctrl.analysisSynthese.tooMuchErrors">Too much error </div></div>
 					
 					<table class="table table-striped table-hover table-condensed" > <!--  style="background-color:#C49E71" -->
 						<tr>
@@ -286,7 +310,7 @@
 							<th>Task-Flownode</th>
 							<th>Connector</th>
 						</tr>
-						<tbody ng-repeat="syntheseitem in logctrl.analysisSynthese.synthese track by $index">
+						<tbody ng-repeat="syntheseitem in ctrl.analysisSynthese.synthese track by $index">
 							<tr ng-show="syntheseitem.type == 'byprocess'">
 								<td >
 									<a href="#" ng-click="syntheseitem.showdetail = ! syntheseitem.showdetail" style="text-decoration:none">					
@@ -311,11 +335,11 @@
 								{{syntheseitem.count}}</td>
 								<td colspan="3">{{syntheseitem.header}}</td>
 							</tr>
-							<tr ng-show="syntheseitem.showdetail && logctrl.display.brutResult">
+							<tr ng-show="syntheseitem.showdetail && ctrl.display.brutResult">
 								<td></td>
-								<td colspan="3" style="{{logctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.l}}</td>
+								<td colspan="3" style="{{ctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.l}}</td>
 							</tr>
-							<tr ng-show="syntheseitem.showdetail && ! logctrl.display.brutResult">
+							<tr ng-show="syntheseitem.showdetail && ! ctrl.display.brutResult">
 								<td></td>
 								<td colspan="3">
 									<table><tr>
@@ -326,18 +350,18 @@
 										<th >Localisation</th>
 				          			</tr>
 									<tr>
-										<td style="{{logctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.lin}}</td>
-										<td style="{{logctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.dte}}</td>
-										<td style="{{logctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.lvl}}</td>
-										<td style="{{logctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.cnt}}</td>
-										<td style="{{logctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.loc}}</td>
+										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.lin}}</td>
+										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.dte}}</td>
+										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.lvl}}</td>
+										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.cnt}}</td>
+										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.loc}}</td>
 									</tr></table>	   			
 							</tr>
 						</tbody>
 					</table>
 	
-					<span ng-show="logctrl.wait"><span class="Loading" >.</span> Loading...</span>									
-					<button ng-click="logctrl.refresh()" class="btn btn-success btn-xs">Refresh</button>
+					<span ng-show="ctrl.wait"><span class="Loading" >.</span> Loading...</span>									
+					<button ng-click="ctrl.refresh()" class="btn btn-warning btn-xs">Refresh</button>
 
 					
 				

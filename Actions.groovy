@@ -58,7 +58,7 @@ import org.bonitasoft.page.log.LogAccess.LogZip;
 
 public class Actions {
 
-	private static Logger logger= Logger.getLogger("org.bonitasoft.custompage.longboard.groovy");
+	private static Logger logger= Logger.getLogger("org.bonitasoft.page.log.groovy");
 	
 	
 	public static Index.ActionAnswer doAction(HttpServletRequest request, String paramJsonSt, HttpServletResponse response, PageResourceProvider pageResourceProvider, PageContext pageContext) {
@@ -112,7 +112,7 @@ public class Actions {
                 actionAnswer.responseMap.put("analysisSynthese", logInformation.getAnalysisSyntheseJson());
                 actionAnswer.responseMap.put("analysisTimeLine", logInformation.getAnalysisErrorTimeLineJson());
                 
-                actionAnswer.responseMap.put("totalLines", logInformation.totalLines);
+                actionAnswer.responseMap.put("totalLines", logInformation.nbTotalLines);
 			}	
 			else if ("zipanddownload".equals(action))
 			{
