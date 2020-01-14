@@ -111,6 +111,10 @@ public class LogItem {
 		  
 		}
 		}
+		if (logLevel==null  || logLevel.trim().length()==0)
+		{
+			logLevel="INFO";
+		}
 	}
 
 	public void addContent(final String contentToAdd) {

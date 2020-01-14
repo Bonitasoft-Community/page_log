@@ -681,7 +681,7 @@ public class LogAccess {
 		if (posEndHour != -1 && posEndNextWord != -1) {
 			String nextWord = line.substring(posEndHour, posEndNextWord).trim();
 			char firstChar = nextWord.length() > 0 ? nextWord.charAt(0) : ' ';
-			if (firstChar == '-' || (firstChar >= '0' && firstChar <= '9'))
+			if (firstChar == '-' || firstChar == '+' || (firstChar >= '0' && firstChar <= '9'))
 				formatLog.posEndDate = posEndNextWord + 1;
 			else
 				formatLog.posEndDate = posEndHour + 1;

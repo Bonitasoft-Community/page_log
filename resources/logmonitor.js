@@ -29,6 +29,21 @@ appCommand.controller('LogControler',
 	this.timerInterval=30;
 	this.refreshisrunning = false;
 	 
+	this.navbaractiv='logContent';
+	
+	this.getNavClass = function( tabtodisplay )
+	{
+		if (this.navbaractiv === tabtodisplay)
+			return 'ng-isolate-scope active';
+		return 'ng-isolate-scope';
+	}
+
+	this.getNavStyle = function( tabtodisplay )
+	{
+		if (this.navbaractiv === tabtodisplay)
+			return 'border: 1px solid #c2c2c2;border-bottom-color: transparent;';
+		return '';
+	}
 
 	 
 	this.getAllFilesLog = function ()
@@ -37,7 +52,12 @@ appCommand.controller('LogControler',
 		self.wait = true;
 		var d = new Date();
 		$http.get( '?page=custompage_log&action=getFilesLog&t='+d.getTime() )
-				.success( function ( jsonResult ) {
+				.success( function ( jsonResult, statusHttp, headers, config ) {					
+					// connection is lost ?
+					if (statusHttp==401 || typeof jsonResult === 'string') {
+						console.log("Redirected to the login page !");
+						window.location.reload();
+					}
 					self.listfileslog 	= jsonResult.listfileslog;
 					self.logpath 		= jsonResult.logpath;
 					self.wait = false;
@@ -58,7 +78,7 @@ appCommand.controller('LogControler',
 				'filterText':'',
 				'filterShortDate':true,
 				'filterAutomaticRefresh':false,
-				'filterTail': false,
+				'filterTail': true,
 				'enableAnalysisError':true,
 				'brutResult' : false,
 				'showLine' : false,
@@ -66,7 +86,8 @@ appCommand.controller('LogControler',
 				'showLevel' : true,
 				'showContent': true,
 				'showLocalisation' : true,
-				'showCompact' : false};
+				'showCompact' : false,
+				'showAllLines' : true};
 	this.listLogItems=[];
 	
 	this.getPageResult = function()
@@ -82,11 +103,23 @@ appCommand.controller('LogControler',
 		this.display.pathName ="";
 		this.callGetLog();
 	}
+	
+	
 	this.getLog = function( logfile )
 	{
 		this.display.fileName = logfile.fileName;
 		this.display.pathName = logfile.pathName;
 		this.callGetLog();
+	}
+	this.getClassLogFile = function(logfile)
+	{
+		console.log("log file name=["+this.logFileName+"] - logFile=["+logfile+"]");
+		if(this.logFileName===logfile){
+			return "btn btn-success btn-xs";
+		}
+		else{
+			return "btn btn-info btn-xs"
+		}
 	}
 	this.callGetLog = function()
 	{
@@ -101,7 +134,13 @@ appCommand.controller('LogControler',
 		
 		
 		$http.get( '?page=custompage_log&action=getLog&paramjson='+json+'&t='+d.getTime() )
-				.success( function ( jsonResult ) {
+				.success( function ( jsonResult, statusHttp, headers, config ) {
+					
+					// connection is lost ?
+					if (statusHttp==401 || typeof jsonResult === 'string') {
+						console.log("Redirected to the login page !");
+						window.location.reload();
+					}
 					self.listLogItems 					= jsonResult.listLogItems;
 					self.analysisSynthese               = jsonResult.analysisSynthese;
 					// self.analysisTimeLine				= jsonResult.analysisTimeLine;
@@ -178,6 +217,7 @@ appCommand.controller('LogControler',
 		var json= encodeURI( angular.toJson(listToDowload, true));
 		return json;
 	};
+	this.getCurrentLog(); // First initialisation display current log
 });
 
 
