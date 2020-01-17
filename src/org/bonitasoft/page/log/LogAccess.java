@@ -347,9 +347,10 @@ public class LogAccess {
 			lineNumber++;
 			// loop on all lines now
 			while (line != null) {
-				// manage
-				if (true) // lineNumber >= logParameter.firstLine && lineNumber
-				// < logParameter.firstLine + logParameter.nbLines)
+				// manage the pagination
+				long first = (logParameter.pageNumber-1) * logParameter.numberPerPage;
+				long end = (logParameter.pageNumber-1) * logParameter.numberPerPage + logParameter.numberPerPage;
+				if (lineNumber >= first && lineNumber < end)
 				{
 
 					if (logParameter.brutResult) {
