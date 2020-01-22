@@ -123,11 +123,14 @@
 					
 					<a href="#" ng-click="ctrl.display.showSettings = ! ctrl.display.showSettings" style="text-decoration:none">					
 			  							<span ng-show="ctrl.display.showSettings" class="glyphicon glyphicon-chevron-down" style="font-size: 18px;"></span>
-		  							</a>
-									<a href="#" ng-click="ctrl.display.showSettings = ! ctrl.display.showSettings" style="text-decoration:none">					
-										<span ng-show="! ctrl.display.showSettings" class="glyphicon glyphicon-chevron-right"  style="font-size: 18px;"></span>
-									</a>	
-						Settings <div  class="btn btn-info btn-xs">{{ctrl.logFileName}}</div>
+		  			</a>
+					<a href="#" ng-click="ctrl.display.showSettings = ! ctrl.display.showSettings" style="text-decoration:none">					
+						<span ng-show="! ctrl.display.showSettings" class="glyphicon glyphicon-chevron-right"  style="font-size: 18px;"></span>
+					</a>	
+					<span ng-show="ctrl.wait">
+						<span class="Loading" >.</span> Loading...
+					</span>
+					Settings <div  class="btn btn-info btn-xs">{{ctrl.logFileName}}</div>
 						
 					
 					<table ng-if="ctrl.display.showSettings">
@@ -144,12 +147,12 @@
 									Log file : <div  class="btn btn-info btn-xs">{{ctrl.logFileName}}</div><p>
 				
 									<span ng-show="ctrl.wait"><span class="Loading" >.</span> Loading...</span>									
-									<button ng-click="ctrl.refresh()" class="btn btn-warning btn-xs">Refresh</button>
+									<button ng-click="ctrl.refresh()" class="btn btn-warning btn-xs" ng-disabled="ctrl.wait">Refresh</button>
 										
 									<table id='maintimer' class="maintimercls">
 									<tr>
 										<td style="padding:10px">	
-											<input type="checkbox" ng-model="ctrl.display.filterAutomaticRefresh" ng-change="ctrl.changeTimer()">AutomaticRefresh </input>
+											<input type="checkbox" ng-model="ctrl.display.filterAutomaticRefresh" ng-change="ctrl.changeTimer()" ng-disabled="ctrl.wait">AutomaticRefresh </input>
 										</td>
 										<td style="padding:10px">
 											<input type="checkbox" ng-model="ctrl.display.filterTail" >Tail</input>
@@ -175,7 +178,7 @@
 									</tr>
 									</table>
 									<span ng-show="ctrl.wait"><span class="Loading" >.</span> Loading...</span>									
-									<button ng-click="ctrl.refresh()" class="btn btn-warning btn-xs">Refresh</button>
+									<button ng-click="ctrl.refresh()" class="btn btn-warning btn-xs" ng-disabled="ctrl.wait">Refresh</button>
 
 									
 								</div>
@@ -218,16 +221,19 @@
 								<option value="200">200</option>
 								<option value="500">500</option>
 							</select>
-							&nbsp;
+							&nbsp;<br>
+							Number of lines : {{ctrl.display.totalLines}}
+							
 						</td><td>
 							<pagination ng-model="ctrl.display.pagenumber" 
 								total-items="ctrl.display.totalLines" 
 								items-per-page="ctrl.display.numberperpage"
-							ng-click="ctrl.refresh()">
-							</pagination>														
-							Number of lines : {{ctrl.display.totalLines}}
+								ng-click="ctrl.refresh()"
+								ng-disabled="ctrl.wait">
+							</pagination><br>														
 							
 						</td>
+						
 					</tr>					
 					</table>
 					
@@ -263,14 +269,15 @@
 								<option value="200">200</option>
 								<option value="500">500</option>
 							</select>
-							&nbsp;
+							&nbsp;<br>
+							Number of lines : {{ctrl.display.totalLines}}
 						</td><td>
 							<pagination ng-model="ctrl.display.pagenumber" 
 								total-items="ctrl.display.totalLines" 
 								items-per-page="ctrl.display.numberperpage"
-							ng-click="ctrl.refresh()">
-							</pagination>														
-							Number of lines : {{ctrl.display.totalLines}}
+								ng-click="ctrl.refresh()"
+								ng-disabled="ctrl.wait">
+							</pagination><br>																					
 						</td>
 					</tr>
 					</table>

@@ -1,0 +1,26 @@
+2020-01-13 10:40:28.340 +0100 INFO: org.bonitasoft.engine.tracking.TimeTracker THREAD_ID=23 | HOSTNAME=DESKTOP-8IJGBME | TENANT_ID=1 | -----
+
+Time Tracker 'org.bonitasoft.engine.tracking.TimeTracker':
+  - trackingEnabled: false
+  - flushIntervalInSeconds: 30000
+  - activatedRecords: EXECUTE_CONNECTOR_DISCONNECT EVALUATE_EXPRESSION_INCLUDING_CONTEXT EXECUTE_CONNECTOR_CALLABLE EXECUTE_CONNECTOR_OUTPUT_OPERATIONS EXECUTE_CONNECTOR_WORK EXECUTE_CONNECTOR_INPUT_EXPRESSIONS EVALUATE_EXPRESSIONS EVALUATE_EXPRESSION EXECUTE_CONNECTOR_INCLUDING_POOL_SUBMIT 
+  - flushEventListeners: org.bonitasoft.engine.tracking.memory.MemoryFlushEventListener: 
+active: false
+No DayRecord registered in memory. org.bonitasoft.engine.tracking.csv.CSVFlushEventListener: 
+active: true
+outputFolder: C:\BOS\BonitaStudioSubscription-7.10.0\workspace\tomcat\server\temp
+ 
+  - records.size: 0
+  - last flush occurrence: Thu Jan 01 01:00:00 CET 1970
+
+-----
+2020-01-13 10:40:30.146 +0100 INFO: com.bonitasoft.engine.monitoring.log.tenant.TenantCachesLogMonitor THREAD_ID=23 | HOSTNAME=DESKTOP-8IJGBME | TENANT_ID=1 | Configuring....
+2020-01-13 10:40:30.653 +0100 INFO: org.quartz.core.QuartzScheduler Scheduler meta-data: Quartz Scheduler (v2.2.1) 'QuartzScheduler' with instanceId 'NON_CLUSTERED'
+  Scheduler class: 'org.quartz.core.QuartzScheduler' - running locally.
+  NOT STARTED.
+  Currently in standby mode.
+  Number of jobs executed: 0
+  Using thread pool 'org.quartz.simpl.SimpleThreadPool' - with 5 threads.
+  Using job-store 'org.bonitasoft.engine.scheduler.impl.BonitaJobStoreCMT' - which supports persistence. and is not clustered.
+
+2020-01-13 10:40:30.653 +0100 INFO: org.bonitasoft.engine.scheduler.impl.BonitaSchedulerFactory Quartz scheduler 'QuartzScheduler' initialized from an externally provided properties instance.

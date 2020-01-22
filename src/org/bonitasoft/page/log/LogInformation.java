@@ -17,7 +17,7 @@ public class LogInformation {
 	public static Set<String> listWarnings = new HashSet<String>(Arrays.asList("WARNING", "WARN", "GRAVE", "AVERTISSEMENT"));
 	public static Set<String> listErrors = new HashSet<String>(Arrays.asList("SEVERE", "ERROR", "FATAL"));
   public static Set<String> listInfos = new HashSet<String>(Arrays.asList("INFO", "INFOS", "CONFIG"));
-  public static Set<String> listDebugs = new HashSet<String>(Arrays.asList("DEBUG", "TRACE", "TRACE_INT", "X_TRACE_INT", "FINE"));
+  public static Set<String> listDebugs = new HashSet<String>(Arrays.asList("DEBUG", "TRACE", "TRACE_INT", "X_TRACE_INT", "FINE", "PRÉCIS"));
   
      
 	/**
@@ -82,8 +82,14 @@ public class LogInformation {
 	 * *************************************************************************
 	 * *******
 	 */
-
+	private boolean allowSave= false;
+	public void allowSave( boolean allowSave ) 
+	{
+	    this.allowSave = allowSave;
+	}
 	public void addLogItem(final LogItem logItem) {
+	    if (!allowSave)
+	        return;
 		/*
 		 * if (listLogs.size() > 0) { logger.info(listLogs.size() +
 		 * " nb, First line is [" + listLogs.get(0).toString() +
