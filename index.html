@@ -58,7 +58,14 @@
 			<div class="bs-component"  ng-controller="LogControler as ctrl">
 			
 				<ul class="nav nav-tabs"  ng-class="{'nav-stacked': vertical, 'nav-justified': justified}" style="border-bottom: 1px solid #c2c2c2;">
-					<li ng-class="{active: active, disabled: false}" id="form-tab" heading="logContent" active="true" title="Display the log file" select="ctrl.navbaractiv == 'logContent'" class="{{ctrl.getNavClass('logContent')}}" style="{{ctrl.getNavStyle('logContent')}}">
+					<li ng-class="{active: active, disabled: false}" 
+						id="form-tab" 
+						heading="logContent" 
+						active="true" 
+						title="Display the log file" 
+						select="ctrl.navbaractiv == 'logContent'" 
+						class="{{ctrl.getNavClass('logContent')}}" 
+						style="{{ctrl.getNavStyle('logContent')}}">
 						  <a ng-click="ctrl.navbaractiv = 'logContent';"   class="ng-binding">Log</a>
 					</li>
 					<li ng-class="{active: active, disabled: false}" id="form-tab" heading="logFile" active="true" title="Select log file" select="ctrl.navbaractiv == 'logFile'" class="{{ctrl.getNavClass('logFile')}}" style="{{ctrl.getNavStyle('logFile')}}">
@@ -84,6 +91,9 @@
 					All logs files found in the directory are display. Clicks on one to see its content.
 					</div>
 					
+					<span ng-show="ctrl.wait">
+						<span class="Loading" >.</span> Loading...
+					</span>
 					
 					<button ng-click="ctrl.getAllFilesLog()" class="btn btn-warning btn-xs">&nbsp;Refresh&nbsp;</button><p>
 
@@ -220,6 +230,8 @@
 								<option value="100">100</option>
 								<option value="200">200</option>
 								<option value="500">500</option>
+								<option value="1000">1000</option>
+								<option value="2000">2000</option>
 							</select>
 							&nbsp;<br>
 							Number of lines : {{ctrl.display.totalLines}}
@@ -268,6 +280,8 @@
 								<option value="100">100</option>
 								<option value="200">200</option>
 								<option value="500">500</option>
+								<option value="1000">1000</option>
+								<option value="2000">2000</option>
 							</select>
 							&nbsp;<br>
 							Number of lines : {{ctrl.display.totalLines}}
@@ -297,17 +311,35 @@
 					<input type="checkbox" ng-model="ctrl.display.analysisCompactBasedOnError">Analyze compact based on error type</input>				
 					<!-- CHART TIMELINE -->
 					
-					<div google-chart chart="analysisTimeLine" style="height: 200px; width: 100%; position: relative; "></div>
-								
+					<table width="100%">
+						<tr>
+						<td width="80%">
+							<div google-chart chart="analysisTimeLine" style="height: 200px; width: 100%; position: relative; "></div>
+						</td>
+						<td>
+							<div class="panel panel-primary">
+							 	<div class="panel-heading">
+							 		Statistics
+							 	</div>
+							 	<div class="panel-body">
+							 		<table width="100%">
+							 			<tr><td>Errors detected:</td><td style="text-align: right"> {{ctrl.analysisSynthese.nbErrorsDetected}}</td><td></td></tr>
+								 		<tr><td>Different:</td><td style="text-align: right"> {{ctrl.analysisSynthese.nbDifferentErrorsDetected}}</td><td></td></tr>
+								  		<tr><td>Logs items:</td><td style="text-align: right"> {{ctrl.analysisSynthese.nbLogItemsSt}}</td><td></td></tr>
+								  		<tr><td>Lines:</td><td style="text-align: right"> {{ctrl.analysisSynthese.nbTotalLinesSt}}</td><td></td></tr>
+								  		<tr><td>Analyzed in:</td><td style="text-align: right"> {{ctrl.analysisSynthese.timeAnalysisInSec}}</td><td>&nbsp;s</td></tr>
+								  </table>
+								</div>
+							</div>
+						</td>
+					</tr>
+					</table>
+							
 					
 					<!-- SYNTHESE -->
 					<div class="alert alert-danger" ng-show="{{ctrl.analysisSynthese.tooMuchErrors}}">Too much <b>different</b> errors arrived, only {{ctrl.analysisSynthese.maxErrors}} are saved</div>
-					<div class="alert alert-info" >{{ctrl.analysisSynthese.nbErrorsDetected}} total detected,
-								 {{ctrl.analysisSynthese.nbDifferentErrorsDetected}} different,
-								  {{ctrl.analysisSynthese.nbLogItemsSt}} log items,
-								  {{ctrl.analysisSynthese.nbTotalLinesSt}} lines,
-								  Analysed in {{ctrl.analysisSynthese.timeAnalysisInSec}} s,
-								 <div ng-show="ctrl.analysisSynthese.tooMuchErrors">Too much error </div></div>
+					<div class="alert alert-info" ng-show="ctrl.analysisSynthese.tooMuchErrors">
+								 Too much errors</div>
 					
 					<table class="table table-striped table-hover table-condensed" > <!--  style="background-color:#C49E71" -->
 						<tr>

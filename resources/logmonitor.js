@@ -40,9 +40,10 @@ appCommand.controller('LogControler',
 
 	this.getNavStyle = function( tabtodisplay )
 	{
+		console.log("getNavStyle: navbar="+this.navbaractiv+" - tabtodisplay="+tabtodisplay);
 		if (this.navbaractiv === tabtodisplay)
 			return 'border: 1px solid #c2c2c2;border-bottom-color: transparent;';
-		return '';
+		return 'background-color:#cbcbcb';
 	}
 
 	 
@@ -113,7 +114,7 @@ appCommand.controller('LogControler',
 	}
 	this.getClassLogFile = function(logfile)
 	{
-		console.log("log file name=["+this.logFileName+"] - logFile=["+logfile+"]");
+		// console.log("getClassLogFile file name=["+this.logFileName+"] - logFile=["+logfile+"]");
 		if(this.logFileName===logfile){
 			return "btn btn-success btn-xs";
 		}

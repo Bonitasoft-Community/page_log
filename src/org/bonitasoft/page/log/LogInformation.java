@@ -88,6 +88,11 @@ public class LogInformation {
 	    this.allowSave = allowSave;
 	}
 	public void addLogItem(final LogItem logItem) {
+	    // do the log analysis everytime
+	    
+        logAnalyseError.analyse( logItem);
+        
+        // then, not allow to save, we don't keep it
 	    if (!allowSave)
 	        return;
 		/*
@@ -96,7 +101,6 @@ public class LogInformation {
 		 * "] **** Last is*****[" + listLogs.get(listLogs.size() - 1).toString()
 		 * + "] *****Current***** " + logItem.toString()); }
 		 */
-		logAnalyseError.analyse( logItem);
 		if (!keepTheLine(logItem)) {
 			// logger.info("Not keep the line " + logItem.lineNumber);
 			return;
