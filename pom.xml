@@ -1,8 +1,8 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	<groupId>org.bonitasoft.page.log</groupId>
-	<artifactId>LogAccess</artifactId>
-	<version>2.5.1</version>
+	<groupId>org.bonitasoft.custompage</groupId>
+	<artifactId>CustomPageLogAccess</artifactId>
+	<version>2.6.0</version>
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
@@ -60,8 +60,74 @@
 		</repository>
 	</repositories>
 	<build>
-		<!-- ******************** Copy JAR files under lib **************** -->
 		<plugins>
+			<!-- ******************** Copy JAR files under bonitamavenrepository **************** -->
+			<plugin>
+				<groupId>org.codehaus.groovy.maven</groupId>
+				<artifactId>gmaven-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>execute</goal>
+						</goals>
+						<configuration>
+							<source>
+								import java.nio.file.*;
+
+								String groupIdPath = "${project.groupId}".replace('.', '/');
+
+								String fileName = "${artifactId}-${version}.jar";
+								Path destPath = Paths.get( "../bonitamavenrepository/${groupIdPath}/${artifactId}/${version}" );
+
+								Path sourceJarFile = Paths.get("target/"+fileName);
+								Path destJarFile = Paths.get( destPath.toString()+"/"+fileName);
+								copyFile( sourceJarFile, destJarFile);
+
+								Path sourcePom = Paths.get("pom.xml" );
+								Path destPom = Paths.get( destPath.toString()+"/${artifactId}-${version}.pom" );
+								copyFile( sourcePom, destPom);
+								return;
+
+								public void copyFile( Path sourcePath, Path destinationPath ) {
+								try {
+								Path parentPath = destinationPath.getParent();
+								println(" Create Directory:"+parentPath.toString());
+								Files.createDirectories(parentPath);
+
+
+								try {
+								if (destinationPath.toFile().exists()) {
+								println(" Delete existing file:"+destinationPath.toString());
+								Files.delete(destinationPath);
+								}
+								} catch(Exception e) {
+								println(" Error during deletion "+e.getMessage());
+								}
+								println(" Copy:"+sourcePath+" =>"+destinationPath);
+
+
+								def file = sourcePath.toFile();
+								def newFile = destinationPath.toFile();
+								Files.copy(file.toPath(), newFile.toPath());
+
+								} catch(Exception e )
+								{
+								println("Exception "+e.getMessage());
+								}
+								}
+
+
+
+
+							</source>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- ******************** Copy JAR files under lib **************** -->
+
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-dependency-plugin</artifactId>
