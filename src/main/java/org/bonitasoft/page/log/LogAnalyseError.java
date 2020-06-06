@@ -1,10 +1,8 @@
 package org.bonitasoft.page.log;
 
-import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,118 +19,11 @@ public class LogAnalyseError {
 
 	private String logFileName;
 	private boolean enableAnalysis;
-	private boolean analysisCompactBasedOnError;
+	boolean analysisCompactBasedOnError;
 	
-	public class AnalyseItem {
-		public int count = 0;
-		public LogItem logItem;
+	
 
-		public AnalyseItem(LogItem logItem) {
-			this.logItem = logItem;
-		}
-	}
-
-	/**
-	 * internal class to collect the synthesis
-	 *
-	 */
-	public class AnalysisSynthese {
-		private Map<String, AnalyseItem> mapSynthese = new LinkedHashMap<String, AnalyseItem>();
-
-		private boolean tooMuchErrors = false;
-		private int nbErrorsDetected = 0;
-		private int nbDifferentErrorsDetected=0;
-		private final static int maxErrorSynthese = 2000;
-
-		private long timeAnalysisInms;
-		private long nbLogItems;
-		private long nbTotalLines;
-		
-		public Map<String, Object> toJson() {
-			DecimalFormat myFormatter = new DecimalFormat("###,###,###,###,###,###,###");
-			
-			Map<String, Object> result = new HashMap<String, Object>();
-			List<Map<String, Object>> listSynthese = new ArrayList<Map<String, Object>>();
-			result.put("synthese", listSynthese);
-			for (AnalyseItem item : mapSynthese.values()) {
-				Map<String, Object> mapItem = new HashMap<String, Object>();
-				listSynthese.add(mapItem);
-				mapItem.put("count", item.count);
-
-				if (item.logItem.processDefinitionId == null) {
-					mapItem.put("type", "bycontent");
-					mapItem.put("header", item.logItem.getHeader());
-				} else {
-					mapItem.put("type", "byprocess");
-					mapItem.put("processname", item.logItem.processDefinitionName);
-					mapItem.put("processversion", item.logItem.processDefinitionVersion);
-					mapItem.put("processid", item.logItem.processDefinitionId);
-					mapItem.put("flownodeid", item.logItem.flowNodeDefinitionId);
-					mapItem.put("flownodename", item.logItem.flowNodeDefinitionName);
-					mapItem.put("connectorName", item.logItem.connectorImplementationClassName);
-				}
-				mapItem.put("logitem", item.logItem.toJson());
-			}
-			result.put("tooMuchErrors", tooMuchErrors);
-			result.put("maxErrors", maxErrorSynthese);
-			result.put("timeAnalysisInSec", timeAnalysisInms / 1000);
-			result.put("nbLogItems", nbLogItems);
-			result.put("nbLogItemsSt", myFormatter.format(nbLogItems));
-			result.put("nbTotalLines", nbTotalLines);
-			result.put("nbTotalLinesSt", myFormatter.format(nbTotalLines));
-				  
-
-			result.put("nbErrorsDetected", nbErrorsDetected);
-			result.put("nbDifferentErrorsDetected", nbDifferentErrorsDetected);
-
-			return result;
-		}
-
-		public void add(LogItem logItem) {
-			nbLogItems++;
-			
-			
-			String key ;
-			if (analysisCompactBasedOnError)
-			{
-				if (logItem.causedBy !=null)	
-				{
-					// search the first : 
-					int pos = logItem.causedBy.indexOf(":");
-					if (pos!=-1)
-						key=logItem.causedBy.substring(0,pos);
-					else
-						key=logItem.causedBy.length()>100 ? logItem.causedBy.substring(0,100): logItem.causedBy;
-				}
-				else
-					key = logItem.getHeader();
-			}
-			else
-			{
-				key = logItem.processDefinitionId + "#" + logItem.flowNodeDefinitionId + "#" + logItem.connectorImplementationClassName + "#" + logItem.causedBy;
-			
-				if (logItem.processDefinitionId == null)
-					key = logItem.getHeader();
-			}
-			nbErrorsDetected++;
-			if (!mapSynthese.containsKey(key)) {
-				nbDifferentErrorsDetected++;
-				// protect the server : if there are too much error, stop
-				// recorded it
-				if (mapSynthese.size() > maxErrorSynthese)
-				{
-					tooMuchErrors = true;
-					return;
-				}
-				else
-					mapSynthese.put(key, new AnalyseItem(logItem));
-			}
-			AnalyseItem analyseItem = mapSynthese.get(key);
-			analyseItem.count++;
-		}
-	}
-
-	private AnalysisSynthese analysisSynthese = new AnalysisSynthese();
+	private LogAnalysisSynthese analysisSynthese = new LogAnalysisSynthese(this);
 
 	/**
 	 * internal class to collect the TimeLine
@@ -314,7 +205,7 @@ public class LogAnalyseError {
 	/**
 	 * getter information
 	 */
-	public AnalysisSynthese getSynthese() {
+	public LogAnalysisSynthese getSynthese() {
 		return analysisSynthese;
 	}
 

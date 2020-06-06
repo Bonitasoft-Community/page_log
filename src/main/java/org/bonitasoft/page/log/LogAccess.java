@@ -257,6 +257,19 @@ public class LogAccess {
         return sortMapLogs;
     }
 
+    
+    private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+    /**
+     * Get all files for a particular date
+     * @param dateOfTheDay
+     * @return
+     */
+    public static List<FileInformation> getFilesInfoLogOneDay( Date dateOfTheDay ) {
+         Map<String, List<FileInformation>> listAllFiles = getFilesInfoLog();
+         // Expected a structure
+         String dateString = sdf.format( dateOfTheDay);
+         return listAllFiles.get(dateString);
+    }
     /**
      * return the same information for JSON
      * 
@@ -291,7 +304,7 @@ public class LogAccess {
      */
 
     /**
-     * get the log file
+     * Parse the log file and return all information inside
      *
      * @param fileName
      * @return

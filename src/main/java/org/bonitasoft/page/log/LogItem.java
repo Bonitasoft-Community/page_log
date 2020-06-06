@@ -117,6 +117,16 @@ public class LogItem {
 		}
 	}
 
+	public boolean isLevelWarning() {
+	   return LogInformation.listWarnings.contains(logLevel); 
+	}
+    public boolean isLevelError() {
+        return LogInformation.listErrors.contains(logLevel); 
+     }
+    public boolean isLevelInfo() {
+        return LogInformation.listInfos.contains(logLevel); 
+     }
+	
 	public void addContent(final String contentToAdd) {
 		if (content.length() > maxLengthContent) {
 			return; // already too big
@@ -240,7 +250,7 @@ public class LogItem {
 	 * in order to save time, the deep analysis is done only on demande
 	 */
 	public void deepAnalysis() {
-		StringBuffer completeContent = new StringBuffer(content);
+		StringBuilder completeContent = new StringBuilder(content);
 		for (LogItem logItem : listLinkedLogItem)
 			completeContent.append(logItem.content);
 		String completeContentSt = completeContent.toString();
