@@ -79,8 +79,7 @@ appCommand.controller('LogControler',
 				'filterText':'',
 				'filterShortDate':true,
 				'filterAutomaticRefresh':false,
-				'filterTail': true,
-				'enableAnalysisError':true,
+				'filterTail': true,				
 				'brutResult' : false,
 				'showLine' : false,
 				'showDate' : true,
@@ -88,7 +87,14 @@ appCommand.controller('LogControler',
 				'showContent': true,
 				'showLocalisation' : true,
 				'showCompact' : false,
-				'showAllLines' : true};
+				'showAllLines' : true,
+				'analyze' : {
+					'enableAnalysisError':true,
+					'analysisCompactBasedOnError':true,
+					'perimeter':'ERROR',
+					'policy' :'ALL'
+							}
+				};
 	this.listLogItems=[];
 	
 	this.getPageResult = function()
@@ -168,6 +174,11 @@ appCommand.controller('LogControler',
 		console.log("Refresh");
 		this.callGetLog( this.logFileName );
 	}
+	this.refreshAnalyse=function()
+	{
+		console.log("Refresh");
+		this.callGetLog( this.logFileName );
+	}
 
 	
 	// auto refresh
@@ -192,9 +203,11 @@ appCommand.controller('LogControler',
 	 */
 	this.getLineStyle = function ( logline )
 	{
-		var line= logline.stl;
+		var line= logline.stl+";vertical-align:top";
 		if (this.display.showCompact)
 			line = line + ";padding:1px;";
+		else
+			line = line + ";padding:5px;";
 		return line;
 	}
 

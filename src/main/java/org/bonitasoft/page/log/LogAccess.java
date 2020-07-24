@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,6 +58,9 @@ public class LogAccess {
      * *******
      */
 
+    public enum PERIMETER { ERROR, WARNING };
+    public enum POLICY { TOP10, TOP100, ALL };
+    
     /**
      * logparametres
      */
@@ -76,11 +80,15 @@ public class LogAccess {
         public boolean filterTail;
 
         /**
-         * if true, the analysis of error is enalble
+         * if true, the analysis of error is enable
          */
-        public boolean enableAnalysisError;
+        public boolean enableAnalysisError=false;
 
         public boolean analysisCompactBasedOnError;
+        // ERROR or WARNING 
+        
+        public PERIMETER perimeter = PERIMETER.ERROR; 
+        public POLICY policy = POLICY.ALL; 
 
         public List<String> zipanddownload;
 
@@ -121,7 +129,16 @@ public class LogAccess {
             logParameter.filterShortDate = Toolbox.getBoolean(jsonHash.get("filterShortDate"), false);
             logParameter.filterTail = Toolbox.getBoolean(jsonHash.get("filterTail"), false);
             logParameter.zipanddownload = Toolbox.getListString(jsonHash.get("listdaysdownload"), null);
-            logParameter.enableAnalysisError = Toolbox.getBoolean(jsonHash.get("enableAnalysisError"), false);
+            Map<String,Object> mapAnalyse = (Map) jsonHash.get("analyze" );
+            try {
+                logParameter.enableAnalysisError = Toolbox.getBoolean( mapAnalyse.get("enableAnalysisError"), false);
+                logParameter.perimeter = PERIMETER.valueOf( mapAnalyse.get("perimeter").toString());
+                logParameter.policy = POLICY.valueOf( mapAnalyse.get("policy").toString());
+
+            } catch(Exception e )
+            
+            {}
+            
             return logParameter;
         }
     }
@@ -358,6 +375,8 @@ public class LogAccess {
             br = new BufferedReader(new FileReader(logInformation.completeLogFileName));
 
             String line = br.readLine();
+            line = new String(line.getBytes(), StandardCharsets.UTF_8);
+
             lineNumber++;
 
             // manage the pagination
@@ -458,6 +477,8 @@ public class LogAccess {
 
                 }
                 line = br.readLine();
+                line = new String(line.getBytes(), StandardCharsets.UTF_8);
+
                 lineNumber++;
                 if (logParameter.logInformation && lineNumber % 500 == 0) {
                     logger.info("Read line " + lineNumber);

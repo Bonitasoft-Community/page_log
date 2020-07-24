@@ -9,6 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.bonitasoft.page.log.LogAccess.POLICY;
 import org.bonitasoft.store.toolbox.LoggerStore.LOGLEVEL;
 
 
@@ -47,7 +48,7 @@ public class LogAnalysisSynthese {
     private boolean tooMuchErrors = false;
     private long nbErrorsDetected = 0;
     private long nbDifferentErrorsDetected = 0;
-    private final static int maxErrorSynthese = 2000;
+    private final static int maxErrorSynthese = 100000;
 
     long timeAnalysisInms;
     private long nbLogItems;
@@ -123,6 +124,9 @@ public class LogAnalysisSynthese {
             listSynthese.add(mapItem);
             mapItem.put("count", item.count);
 
+            mapItem.put("datest", item.logItem.dateSt);
+            mapItem.put("lin", item.logItem.lineNumber);
+            
             if (item.logItem.processDefinitionId == null) {
                 mapItem.put("type", "bycontent");
                 mapItem.put("header", item.logItem.getHeader());
@@ -137,6 +141,40 @@ public class LogAnalysisSynthese {
             }
             mapItem.put("logitem", item.logItem.toJson());
         }
+        Collections.sort(listSynthese, new Comparator<Map<String, Object>>()
+        {
+          public int compare(Map<String, Object> s1,
+                  Map<String, Object> s2)
+          {
+              if (POLICY.ALL.equals(logAnalyseError.getPolicy()))
+              {
+                  // order by the date
+                  String date1 = (String) s1.get("datest");
+                  String date2 = (String) s2.get("datest");
+                  if (date1==null)
+                      date1="";
+                  if (date2==null)
+                      date2="";
+                  return date1.compareTo(date2);
+              }
+              if (POLICY.TOP10.equals(logAnalyseError.getPolicy()) || POLICY.TOP100.equals(logAnalyseError.getPolicy())) 
+              {
+                  
+                  Integer count1 = (Integer) s1.get("count");
+                  Integer count2 = (Integer) s2.get("count");
+                  // inverse : we want the top in top
+                  return count2.compareTo(count1);
+              }
+              return 0;
+          }
+        });
+        
+        if (POLICY.TOP10.equals(logAnalyseError.getPolicy()))
+            listSynthese = listSynthese.size()>10 ? listSynthese.subList(0, 10) : listSynthese;
+                
+        if (POLICY.TOP100.equals(logAnalyseError.getPolicy())) 
+            listSynthese = listSynthese.size()>100 ? listSynthese.subList(0, 100) : listSynthese;
+            
         result.put("tooMuchErrors", tooMuchErrors);
         result.put("maxErrors", maxErrorSynthese);
         result.put("timeAnalysisInSec", timeAnalysisInms / 1000);

@@ -29,9 +29,11 @@ import java.sql.DatabaseMetaData;
 import org.apache.commons.lang3.StringEscapeUtils
  
 import org.bonitasoft.engine.identity.User;
-import org.bonitasoft.console.common.server.page.PageContext
-import org.bonitasoft.console.common.server.page.PageController
-import org.bonitasoft.console.common.server.page.PageResourceProvider
+
+import org.bonitasoft.web.extension.page.PageContext;
+import org.bonitasoft.web.extension.page.PageController;
+import org.bonitasoft.web.extension.page.PageResourceProvider;
+
 import org.bonitasoft.engine.exception.AlreadyExistsException;
 import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
 import org.bonitasoft.engine.exception.CreationException;
@@ -76,17 +78,17 @@ public class Index implements PageController {
 		try {
 			String requestParamJson= request.getParameter("paramjson");
 			String requestParamJsonSt = (requestParamJson==null ? null : java.net.URLDecoder.decode(requestParamJson, "UTF-8"));
-			loggerCustomPage.info("#### CustomPage:Groovy , requestParamJsonSt=["+requestParamJsonSt+"]" );
+			// loggerCustomPage.fine("#### CustomPage:Groovy , requestParamJsonSt=["+requestParamJsonSt+"]" );
 			
 			
 			Index.ActionAnswer actionAnswer = Actions.doAction( request, requestParamJsonSt,  response, pageResourceProvider, pageContext );
 			if (! actionAnswer.isManaged)
 			{
-				loggerCustomPage.info("#### CustomPage:Groovy NoAction, return index.html" );
+				// loggerCustomPage.info("#### CustomPage:Groovy NoAction, return index.html" );
 				runTheBonitaIndexDoGet( request, response,pageResourceProvider,pageContext);
 				return;
 			}
-			loggerCustomPage.info("#### CustomPage:Groovy , ResponseMap="+actionAnswer.responseMap.size() );
+			// loggerCustomPage.info("#### CustomPage:Groovy , ResponseMap="+actionAnswer.responseMap.size() );
 			
 			if (actionAnswer.responseMap.size()>0)
 			{
@@ -96,7 +98,7 @@ public class Index implements PageController {
 				PrintWriter out = response.getWriter()
 				String jsonSt = JSONValue.toJSONString( actionAnswer.responseMap );
 				out.write( jsonSt );
-				loggerCustomPage.info("#### ##############################CustomPage: return json["+jsonSt+"]" );
+				// loggerCustomPage.fine("#### ##############################CustomPage: return json["+jsonSt+"]" );
 				out.flush();
 				out.close();
 				return;

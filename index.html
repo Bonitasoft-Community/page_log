@@ -12,10 +12,11 @@
     <title>Log</title>
     <meta name="description" content="">
     <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" href="pageResource?page=custompage_log&location=style/animate.css" />
-    <link rel="stylesheet" href="pageResource?page=custompage_log&location=style/bootstrap.min.css">
-	<link rel="stylesheet" href="pageResource?page=custompage_log&location=style/main.css">
-	<link rel="stylesheet" href="pageResource?page=custompage_log&location=style/style.css">
+ 
+  <link rel="stylesheet" href="css/animate.css" />
+  <link rel="stylesheet" href="3rd-party/bootstrap-3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="css/main.css">
+  <link rel="stylesheet" href="css/style.css">
 
 	<script type="text/javascript" src="https://www.google.com/jsapi"></script>
 	<script type="text/javascript" src="https://www.google.com/uds/?file=visualization&amp;v=1&amp;hl=fr&amp;packages=corechart&amp;async=2"></script>
@@ -45,7 +46,7 @@
 
 	<center>
 	<table>
-		<tr><td><h1>Logs on server</h1></td><td style="font-size:0.8em;vertical-align:bottom"> V2.5.1</span></td>
+		<tr><td><h1>Logs on server</h1></td><td style="font-size:0.8em;vertical-align:bottom"> V2.6.1</span></td>
 		</tr>
 	</table>
 	</center>
@@ -161,10 +162,10 @@
 										
 									<table id='maintimer' class="maintimercls">
 									<tr>
-										<td style="padding:10px">	
+										<td style="padding:5px">	
 											<input type="checkbox" ng-model="ctrl.display.filterAutomaticRefresh" ng-change="ctrl.changeTimer()" ng-disabled="ctrl.wait">AutomaticRefresh </input>
 										</td>
-										<td style="padding:10px">
+										<td style="padding:5px">
 											<input type="checkbox" ng-model="ctrl.display.filterTail" >Tail</input>
 										</td>
 									</tr>
@@ -181,9 +182,9 @@
 							 	<div class="panel-body">
 									<table>
 									<tr>
-										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.filterError" ng-disabled="ctrl.display.brutResult">Only error & warm</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.enableAnalysisError" ng-disabled="ctrl.display.brutResult">Analyse Errors</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.filterShortDate" ng-disabled="ctrl.display.brutResult">Short Date</input></td>
+										<td style="padding:5px"><input type="checkbox" ng-model="ctrl.display.filterError" ng-disabled="ctrl.display.brutResult">Only error & warm</input></td>
+										<td style="padding:5px"><input type="checkbox" ng-model="ctrl.display.analyze.enableAnalysisError" ng-disabled="ctrl.display.brutResult">Analyse Errors</input></td>
+										<td style="padding:5px"><input type="checkbox" ng-model="ctrl.display.filterShortDate" ng-disabled="ctrl.display.brutResult">Short Date</input></td>
 										<td>Filter text : <input type="input" ng-model="ctrl.display.filterText" ng-disabled="ctrl.display.brutResult"></input></td>												
 									</tr>
 									</table>
@@ -201,13 +202,13 @@
 							 	</div>
 							 	<div class="panel-body">						
 									<table>
-									<tr><td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.brutResult" ng-change="ctrl.refresh()">Brut</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.showLine">Line</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.showDate">Date</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.showLevel">Level</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.showContent">Content</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.showLocalisation">Localisation</input></td>
-										<td style="padding:10px"><input type="checkbox" ng-model="ctrl.display.showCompact">Compact</input></td>						
+									<tr><td style="padding:5px"><input type="checkbox" ng-model="ctrl.display.brutResult" ng-change="ctrl.refresh()">Brut</input></td>
+										<td style="padding:5px"><input type="checkbox" ng-model="ctrl.display.showLine">Line</input></td>
+										<td style="padding:5px"><input type="checkbox" ng-model="ctrl.display.showDate">Date</input></td>
+										<td style="padding:5px"><input type="checkbox" ng-model="ctrl.display.showLevel">Level</input></td>
+										<td style="padding:5px"><input type="checkbox" ng-model="ctrl.display.showContent">Content</input></td>
+										<td style="padding:5px"><input type="checkbox" ng-model="ctrl.display.showLocalisation">Localization</input></td>
+										<td style="padding:5px"><input type="checkbox" ng-model="ctrl.display.showCompact">Compact</input></td>						
 									</tr>
 									</table>
 								</div>
@@ -259,7 +260,7 @@
 							<th ng-show="! ctrl.display.brutResult && ctrl.display.showDate">Date</th>
 							<th ng-show="! ctrl.display.brutResult && ctrl.display.showLevel">Level</th>
 							<th ng-show="! ctrl.display.brutResult && ctrl.display.showContent">Content</th>
-							<th ng-show="! ctrl.display.brutResult && ctrl.display.showLocalisation">Localisation</th>
+							<th ng-show="! ctrl.display.brutResult && ctrl.display.showLocalisation">Localization</th>
 	          
 						</tr>
 						<tr ng-repeat="logitem in ctrl.getPageResult() track by $index">
@@ -307,10 +308,28 @@
 				<!-- Keep it ng-show, else the file drop will not work ! -->
 					
 				<div class="panel panel-primary" ng-show="ctrl.navbaractiv=='ErrorAnalysis'">
-					<div  class="btn btn-info btn-xs">{{ctrl.logFileName}}</div><br>								
-					<input type="checkbox" ng-model="ctrl.display.analysisCompactBasedOnError">Analyze compact based on error type</input>				
+					<table>
+						<tr><td colspan="6"><div  class="btn btn-info btn-xs">{{ctrl.logFileName}}</div></td>
+						<tr>
+							<td style="padding:5px"><input type="checkbox" ng-model="ctrl.display.analyze.enableAnalysisError" ng-disabled="ctrl.display.brutResult">Analyze Errors</input></td>
+							<td style="padding:5px"><input type="checkbox" ng-model="ctrl.display.analyze.analysisCompactBasedOnError">Analyze compact based on error type</input></td>				
+							<td style="padding:5px"><select ng-model="ctrl.display.analyze.perimeter" >						
+															<option value="ERROR">Error</option>
+															<option value="WARNING">Error + Warning</option>
+													</select> </td>
+							<td style="padding:5px"><select ng-model="ctrl.display.analyze.policy" >						
+														<option value="ALL">All errors</option>
+														<option value="TOP10">Top 10</option>
+														<option value="TOP100">Top 100</option>
+													</select></td>
+							<td style="padding:5px"><button ng-click="ctrl.refreshAnalyse()" class="btn btn-warning btn-xs" ng-disabled="ctrl.wait">Refresh Analyze</button></td>	
+							<td style="padding:5px"><span ng-show="ctrl.wait">
+														<span class="Loading" >.</span> Loading...</span>
+													</td>
+						</tr>
+					</table>									
 					<!-- CHART TIMELINE -->
-					
+					bob
 					<table width="100%">
 						<tr>
 						<td width="80%">
@@ -346,7 +365,6 @@
 						<tr>
 							<th>Occurence</th>
 							<th>Process Name(version)</th>
-							<th>Version</th>
 							<th>Task-Flownode</th>
 							<th>Connector</th>
 						</tr>
@@ -361,7 +379,7 @@
 									</a>								
 								{{syntheseitem.count}}</td>
 								<td>{{syntheseitem.processname}} ({{syntheseitem.processversion}})</td>
-								<th>{{syntheseitem.flownodename}}</td>
+								<td>{{syntheseitem.flownodename}}</td>
 								<td>{{syntheseitem.connectorName}}</td>
 							</tr>
 							<tr>
@@ -383,19 +401,20 @@
 								<td></td>
 								<td colspan="3">
 									<table><tr>
-										<th >#</th>
+										<th >Line</th>
 										<th >Date</th>
 										<th >Level</th>
 										<th >Content</th>
-										<th >Localisation</th>
+										<th >Localization</th>
 				          			</tr>
 									<tr>
-										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.lin}}</td>
-										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.dte}}</td>
-										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.lvl}}</td>
-										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.cnt}}</td>
-										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}}">{{syntheseitem.logitem.loc}}</td>
-									</tr></table>	   			
+										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}};font-size: 10px">{{syntheseitem.logitem.lin}}</td>
+										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}};font-size: 10px">{{syntheseitem.logitem.dte}}</td>
+										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}};font-size: 10px">{{syntheseitem.logitem.lvl}}</td>
+										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}};font-size: 10px">{{syntheseitem.logitem.cnt}}</td>
+										<td style="{{ctrl.getLineStyle(syntheseitem.logitem)}};font-size: 10px">{{syntheseitem.logitem.loc}}</td>
+									</tr>
+									</table>	   			
 							</tr>
 						</tbody>
 					</table>
@@ -422,7 +441,7 @@
 <script src="pageResource?page=custompage_log&location=3rd-party/angular-resource.min.js"></script>
 <script src="pageResource?page=custompage_log&location=3rd-party/angular-cookies.min.js"></script>
 
-<script src="pageResource?page=custompage_log&location=3rd-party/bootstrap/js/bootstrap.min.js"></script>
+<script src="pageResource?page=custompage_log&location=3rd-party/bootstrap-3.3.7/js/bootstrap.min.js"></script>
 <script src="pageResource?page=custompage_log&location=3rd-party/angular-bootstrap-tpls.min.js"></script>
 <script src="pageResource?page=custompage_log&location=3rd-party/angular-file-upload.js"></script>
 <script src="pageResource?page=custompage_log&location=3rd-party/ng-google-chart.js"></script>

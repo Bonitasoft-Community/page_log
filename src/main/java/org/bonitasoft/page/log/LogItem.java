@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.StringTokenizer;
 
 import org.bonitasoft.page.log.LogAccess.LogParameter;
+import org.bonitasoft.page.log.LogAccess.PERIMETER;
 
 /**
  * the LogInformation manage some LogItem
@@ -39,7 +40,7 @@ public class LogItem {
 	 * the different logItem are linked
 	 * 
 	 */
-	final private List<LogItem> listLinkedLogItem = new ArrayList<LogItem>();
+	final private List<LogItem> listLinkedLogItem = new ArrayList<>();
 	/**
 	 * in general, the nbLinkedLog == listLinkedLogItem.size() but if the list
 	 * is too big, then the new item is not recorded.
@@ -296,8 +297,17 @@ public class LogItem {
 			
 	}
 
+	/**
+	 * 
+	 * @return
+	 */
 	public boolean isError() {
-		return LogInformation.listWarnings.contains(logLevel) || LogInformation.listErrors.contains(logLevel);
+	    if (logParameter.perimeter == PERIMETER.ERROR)
+	        return LogInformation.listErrors.contains(logLevel);
+	    else if (logParameter.perimeter == PERIMETER.WARNING)
+	           return LogInformation.listWarnings.contains(logLevel) || LogInformation.listErrors.contains(logLevel);
+	    else // not normal
+	           return LogInformation.listWarnings.contains(logLevel) || LogInformation.listErrors.contains(logLevel);
 	}
 
 	/* ********************************************************************* */
@@ -310,7 +320,7 @@ public class LogItem {
 	public Map<String, Object> toJson() {
 		// SimpleDateFormat sdf = new SimpleDateFormat(sdfFormat);
 
-		final Map<String, Object> map = new HashMap<String, Object>();
+		final Map<String, Object> map = new HashMap<>();
 		if (line == null) {
 			map.put("lin", lineNumber);
 			map.put("dte", dateSt);
@@ -353,9 +363,8 @@ public class LogItem {
 		String str = searchString(prefix, completeContentSt);
 		try {
 			return Long.valueOf(str);
-		} catch (Exception e) {
-		}
-		;
+		} catch (Exception e) {}
+		
 		return null;
 	}
 

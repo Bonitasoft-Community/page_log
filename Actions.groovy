@@ -29,9 +29,11 @@ import java.sql.DatabaseMetaData;
 import org.apache.commons.lang3.StringEscapeUtils
  
 import org.bonitasoft.engine.identity.User;
-import org.bonitasoft.console.common.server.page.PageContext
-import org.bonitasoft.console.common.server.page.PageController
-import org.bonitasoft.console.common.server.page.PageResourceProvider
+
+import org.bonitasoft.web.extension.page.PageContext;
+import org.bonitasoft.web.extension.page.PageController;
+import org.bonitasoft.web.extension.page.PageResourceProvider;
+
 import org.bonitasoft.engine.exception.AlreadyExistsException;
 import org.bonitasoft.engine.exception.BonitaHomeNotSetException;
 import org.bonitasoft.engine.exception.CreationException;
@@ -63,15 +65,15 @@ public class Actions {
 	
 	public static Index.ActionAnswer doAction(HttpServletRequest request, String paramJsonSt, HttpServletResponse response, PageResourceProvider pageResourceProvider, PageContext pageContext) {
 				
-		logger.info("#### log:Actions start");
+		// logger.fine("#### log:Actions start");
 		Index.ActionAnswer actionAnswer = new Index.ActionAnswer();	
 		try {
 			String action=request.getParameter("action");
-			logger.info("#### log:Actions  action is["+action+"] !");
+			// logger.fine("#### log:Actions  action is["+action+"] !");
 			if (action==null || action.length()==0 )
 			{
 				actionAnswer.isManaged=false;
-				logger.info("#### log:Actions END No Actions");
+				// logger.fine("#### log:Actions END No Actions");
 				return actionAnswer;
 			}
 			actionAnswer.isManaged=true;
@@ -94,7 +96,7 @@ public class Actions {
 			{
 				 String isLog=request.getParameter("log");
 		         if ("Y".equals(isLog))
-					    logger.info("###################################### action is["+action+"] !");
+                     logger.info("###################################### action is["+action+"] !");
 					
 			        
                 LogParameter logParameters = LogParameter.getInstanceFromJsonSt(paramJsonSt);
@@ -121,7 +123,7 @@ public class Actions {
 	            response.addHeader("content-type", "application/zip");
                  
 	            OutputStream output = response.getOutputStream();
-	            logger.info("#### log:Actions ZipAndDownload JSON=["+paramJsonSt+"]");
+	            // logger.info("#### log:Actions ZipAndDownload JSON=["+paramJsonSt+"]");
 	 			
 	            LogParameter logParameters = LogParameter.getInstanceFromJsonSt(paramJsonSt);		               
 	            LogZip logZip = LogAccess.getZipAndDownload(logParameters);
@@ -132,7 +134,7 @@ public class Actions {
             	output.flush();
             	output.close();
 			}
-			logger.info("#### log:Actions END responseMap ="+actionAnswer.responseMap.size());
+			// logger.info("#### log:Actions END responseMap ="+actionAnswer.responseMap.size());
 			return actionAnswer;
 		} catch (Exception e) {
 			StringWriter sw = new StringWriter();
