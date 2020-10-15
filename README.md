@@ -8,5 +8,5 @@ It's possible to filter on error, or to search in the log some information.
 
 Clicking the "automatic refresh" is usefull to view the log in real time.
 
-The Synthese help you to focus immediately on error, by a time line, and a group by error
+The Synthesis help you to focus immediately on error, by a time line, and a group by error
 <img src="screenshotLog_2.jpg"/>
