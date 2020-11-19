@@ -87,13 +87,24 @@ public class Actions {
 				
 			if ("getFilesLog".equals(action))
             {
-                
+                //Make sure no action is executed if the CSRF protection is active and the request header is invalid
+                if (! TokenValidator.checkCSRFToken(request, response)) {
+                                 actionAnswer.isResponseMap=false;
+                                 return actionAnswer;
+                             }
+             
                 actionAnswer.responseMap.put("listfileslog", LogAccess.getFilesLog());
                 actionAnswer.responseMap.put("logpath", LogAccess.getLogPath());
             }
 	            
 			else if ("getLog".equals(action))
 			{
+                //Make sure no action is executed if the CSRF protection is active and the request header is invalid
+                if (! TokenValidator.checkCSRFToken(request, response)) {
+                                 actionAnswer.isResponseMap=false;
+                                 return actionAnswer;
+                             }
+             
 				 String isLog=request.getParameter("log");
 		         if ("Y".equals(isLog))
                      logger.info("###################################### action is["+action+"] !");
@@ -113,11 +124,17 @@ public class Actions {
                 actionAnswer.responseMap.put("listLogItems", logInformation.getListLogsJson());
                 actionAnswer.responseMap.put("analysisSynthese", logInformation.getAnalysisSyntheseJson());
                 actionAnswer.responseMap.put("analysisTimeLine", logInformation.getAnalysisErrorTimeLineJson());
-                
-                actionAnswer.responseMap.put("totalLines", logInformation.nbTotalLines);
+                actionAnswer.responseMap.put("totalLines", logInformation.lineNumberFiltered);                
+                actionAnswer.responseMap.put("totalLinesFiles", logInformation.nbTotalLines);
 			}	
 			else if ("zipanddownload".equals(action))
 			{
+                //Make sure no action is executed if the CSRF protection is active and the request header is invalid
+                if (! TokenValidator.checkCSRFToken(request, response)) {
+                                 actionAnswer.isResponseMap=false;
+                                 return actionAnswer;
+                             }
+             
 				actionAnswer.isManaged=true;
 				response.addHeader("content-disposition", "attachment; filename=LogFiles.zip");
 	            response.addHeader("content-type", "application/zip");

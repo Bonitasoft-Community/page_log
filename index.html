@@ -14,7 +14,7 @@
     <meta name="viewport" content="width=device-width">
  
   <link rel="stylesheet" href="css/animate.css" />
-  <link rel="stylesheet" href="3rd-party/bootstrap-3.3.7/css/bootstrap.min.css">
+  <link rel="stylesheet" href="3rd-party/bootstrap/css/bootstrap.min.css">
   <link rel="stylesheet" href="css/main.css">
   <link rel="stylesheet" href="css/style.css">
 
@@ -24,9 +24,9 @@
 	<script type="text/javascript" src="https://www.google.com/uds/api/visualization/1.0/ff67c3772da186a412ae3231c32409e9/format+fr,default+fr,ui+fr,corechart+fr.I.js"></script>
 	<link href="https://ajax.googleapis.com/ajax/static/modules/gviz/1.0/core/tooltip.css" rel="stylesheet" type="text/css">
 
-	<script src="pageResource?page=custompage_log&location=3rd-party/jquery.min.js"></script>
-	<script src="pageResource?page=custompage_log&location=3rd-party/angular.min.js"></script>
-	<script	src="pageResource?page=custompage_log&location=3rd-party/angular-timer.js"></script>
+	<script src="3rd-party/jquery.min.js"></script>
+	<script src="3rd-party/angular.min.js"></script>
+	<script	src="3rd-party/angular-timer.js"></script>
 
 <style>
 .Loading {
@@ -46,7 +46,7 @@
 
 	<center>
 	<table>
-		<tr><td><h1>Logs on server</h1></td><td style="font-size:0.8em;vertical-align:bottom"> V2.6.1</span></td>
+		<tr><td><h1>Logs on server</h1></td><td style="font-size:0.8em;vertical-align:bottom"> V2.7.0</span></td>
 		</tr>
 	</table>
 	</center>
@@ -222,11 +222,11 @@
 				 	
 							
 					<div>
-					<!-- pagination -->
-				 	
-					<table>
-					<tr>
-						<td>Nb lines per pages : 
+
+					<!-- pagination -->				 	
+					<table style="width:100%">
+					<tr >
+						<td style="padding: 10px;">Lines per page : 
 							<select ng-model="ctrl.display.numberperpage" ng-change="ctrl.refresh()">						
 								<option value="100">100</option>
 								<option value="200">200</option>
@@ -235,24 +235,28 @@
 								<option value="2000">2000</option>
 							</select>
 							&nbsp;<br>
-							Number of lines : {{ctrl.display.totalLines}}
-							
-						</td><td>
+							<small>
+							Number of log lines : {{ctrl.display.totalLines | number}} / Number of physical lines {{ctrl.display.totalLinesFiles| number}}
+							</small>
+						</td><td style="padding: 30px;text-align: center;">
 							<pagination ng-model="ctrl.display.pagenumber" 
 								total-items="ctrl.display.totalLines" 
 								items-per-page="ctrl.display.numberperpage"
 								ng-click="ctrl.refresh()"
-								ng-disabled="ctrl.wait">
+								ng-disabled="ctrl.wait"
+								boundary-links="true" 
+								max-size="10"
+								boundary-link-numbers="true"
+								rotate="true"
+								force-ellipses="true">
 							</pagination><br>														
-							
 						</td>
-						
 					</tr>					
 					</table>
 					
 					<!-- Display -->	
 										
-					<table class="table table-striped table-hover table-condensed" > <!--  style="background-color:#C49E71" -->
+					<table class="table table-striped table-hover table-condensed" style="width:100%"> <!--  style="background-color:#C49E71" -->
 						<tr>
 							<th ng-show="ctrl.display.brutResult">Log</th>
 	
@@ -269,14 +273,18 @@
 							<td ng-show="! ctrl.display.brutResult && ctrl.display.showLine" style="{{ctrl.getLineStyle(logitem)}}">{{logitem.lin}}</td>
 							<td ng-show="! ctrl.display.brutResult && ctrl.display.showDate" style="{{ctrl.getLineStyle(logitem)}}">{{logitem.dte}}</td>
 							<td ng-show="! ctrl.display.brutResult && ctrl.display.showLevel"  style="{{ctrl.getLineStyle(logitem)}}">{{logitem.lvl}}</td>
-							<td ng-show="! ctrl.display.brutResult && ctrl.display.showContent" style="{{ctrl.getLineStyle(logitem)}}">{{logitem.cnt}}</td>
+							<td ng-show="! ctrl.display.brutResult && ctrl.display.showContent" style="{{ctrl.getLineStyle(logitem)}}">
+								<!-- <textarea ng-model="logitem.cnt" readonly cols="60%"></textarea> -->
+								<p style="word-break: break-all"">{{logitem.cnt}}</p>
+							</td>
 							<td ng-show="! ctrl.display.brutResult && ctrl.display.showLocalisation" style="{{ctrl.getLineStyle(logitem)}}">{{logitem.loc}}</td>
 	   					</tr>
 					</table>
-					<!-- pagination -->					
-					<table>
-					<tr>
-						<td>Nb lines per pages : 
+					
+					<!-- pagination -->				 	
+					<table style="width:100%">
+					<tr >
+						<td style="padding: 10px;">Lines per page : 
 							<select ng-model="ctrl.display.numberperpage" ng-change="ctrl.refresh()">						
 								<option value="100">100</option>
 								<option value="200">200</option>
@@ -285,17 +293,26 @@
 								<option value="2000">2000</option>
 							</select>
 							&nbsp;<br>
-							Number of lines : {{ctrl.display.totalLines}}
-						</td><td>
+							<small>
+							Number of log lines : {{ctrl.display.totalLines | number}} / Number of physical lines {{ctrl.display.totalLinesFiles| number}}
+							</small>
+						</td><td style="padding: 30px;text-align: center;">
 							<pagination ng-model="ctrl.display.pagenumber" 
 								total-items="ctrl.display.totalLines" 
 								items-per-page="ctrl.display.numberperpage"
 								ng-click="ctrl.refresh()"
-								ng-disabled="ctrl.wait">
-							</pagination><br>																					
+								ng-disabled="ctrl.wait"
+								boundary-links="true" 
+								max-size="10"
+								boundary-link-numbers="true"
+								rotate="true"
+								force-ellipses="true">
+							</pagination><br>														
 						</td>
-					</tr>
+					</tr>					
 					</table>
+					
+					
 					</div>	
 					<span ng-show="ctrl.wait"><span class="Loading" >.</span> Loading...</span>									
 					<button ng-click="ctrl.refresh()" class="btn btn-warning btn-xs">Refresh</button>
@@ -438,13 +455,13 @@
 <!-- Third party dependencies -->
 
 
-<script src="pageResource?page=custompage_log&location=3rd-party/angular-resource.min.js"></script>
-<script src="pageResource?page=custompage_log&location=3rd-party/angular-cookies.min.js"></script>
+<script src="3rd-party/angular-resource.min.js"></script>
+<script src="3rd-party/angular-cookies.min.js"></script>
 
-<script src="pageResource?page=custompage_log&location=3rd-party/bootstrap-3.3.7/js/bootstrap.min.js"></script>
-<script src="pageResource?page=custompage_log&location=3rd-party/angular-bootstrap-tpls.min.js"></script>
-<script src="pageResource?page=custompage_log&location=3rd-party/angular-file-upload.js"></script>
-<script src="pageResource?page=custompage_log&location=3rd-party/ng-google-chart.js"></script>
+<script src="3rd-party/bootstrap-3.3.7/js/bootstrap.min.js"></script>
+<script src="3rd-party/angular-bootstrap-tpls.min.js"></script>
+<script src="3rd-party/angular-file-upload.js"></script>
+<script src="3rd-party/ng-google-chart.js"></script>
 
 
 <!-- Application dependencies -->

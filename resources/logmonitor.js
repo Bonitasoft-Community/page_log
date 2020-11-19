@@ -6,7 +6,7 @@
 (function() {
 
 
-var appCommand = angular.module('logmonitor', [ 'googlechart', 'ui.bootstrap']);
+var appCommand = angular.module('logmonitor', [ 'googlechart', 'ui.bootstrap','ngCookies']);
 
 
 
@@ -21,7 +21,7 @@ var appCommand = angular.module('logmonitor', [ 'googlechart', 'ui.bootstrap']);
 
 // Ping the server
 appCommand.controller('LogControler',
-	function ( $http, $scope, $interval ) {
+	function ( $http, $scope, $interval, $cookies ) {
 
 	this.wait = false;
 	this.listfileslog=[];
@@ -46,13 +46,24 @@ appCommand.controller('LogControler',
 		return 'background-color:#cbcbcb';
 	}
 
-	 
+	this.getHttpConfig = function () {
+		var additionalHeaders = {};
+		var csrfToken = $cookies.get('X-Bonita-API-Token');
+		if (csrfToken) {
+			additionalHeaders ['X-Bonita-API-Token'] = csrfToken;
+		}
+		var config= {"headers": additionalHeaders};
+		console.log("GetHttpConfig : "+angular.toJson( config));
+		return config;
+	}
+	
+	
 	this.getAllFilesLog = function ()
 	{
 		var self=this;
 		self.wait = true;
 		var d = new Date();
-		$http.get( '?page=custompage_log&action=getFilesLog&t='+d.getTime() )
+		$http.get( '?page=custompage_log&action=getFilesLog&t='+d.getTime(), this.getHttpConfig() )
 				.success( function ( jsonResult, statusHttp, headers, config ) {					
 					// connection is lost ?
 					if (statusHttp==401 || typeof jsonResult === 'string') {
@@ -72,7 +83,7 @@ appCommand.controller('LogControler',
 	this.getAllFilesLog();
 	
 	
-	this.display={ 'brutResult':false,  'numberperpage':100, 'pagenumber':1, 'totallines':0,
+	this.display={ 'brutResult':false,  'numberperpage': '100', 'pagenumber':1, 'totallines':0,
 				'showLogs' : true,
 				'showFilter' : true,
 				'filterError':false,
@@ -140,7 +151,7 @@ appCommand.controller('LogControler',
 		var d = new Date();
 		
 		
-		$http.get( '?page=custompage_log&action=getLog&paramjson='+json+'&t='+d.getTime() )
+		$http.get( '?page=custompage_log&action=getLog&paramjson='+json+'&t='+d.getTime(), this.getHttpConfig() )
 				.success( function ( jsonResult, statusHttp, headers, config ) {
 					
 					// connection is lost ?
@@ -156,6 +167,7 @@ appCommand.controller('LogControler',
 					self.logFileName 					= jsonResult.logfilename;	
 					self.display.completeLogFileName 	= jsonResult.completeLogFileName;	
 					self.display.totalLines 			= jsonResult.totalLines;
+					self.display.totalLinesFiles		= jsonResult.totalLinesFiles;
 					self.wait 							= false;
 					self.refreshisrunning				= false;	
 					// close the logs file panel

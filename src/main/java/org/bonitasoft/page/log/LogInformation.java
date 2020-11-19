@@ -44,10 +44,14 @@ public class LogInformation {
      * we collect this number of line
      */
     public long currentLine = 0;
+    /**
+     * Keep the line number filtered : example, we want to keep only SEVERE line, or GREP line
+     */
+    public long lineNumberFiltered=0;
     public long nbTotalLines = -1;
 
     // if the produceJson is true, produce directly in Json
-    public List<BEvent> listEvents = new ArrayList<BEvent>();
+    public List<BEvent> listEvents = new ArrayList<>();
     public boolean addAsJson = true;
 
     public long startTime;
@@ -91,20 +95,21 @@ public class LogInformation {
         // do the log analysis everytime
 
         logAnalyseError.analyse(logItem);
+      
+        // first, determine if we want to keep this line
 
-        // then, not allow to save, we don't keep it
-        if (!allowSave)
-            return;
-        /*
-         * if (listLogs.size() > 0) { logger.info(listLogs.size() +
-         * " nb, First line is [" + listLogs.get(0).toString() +
-         * "] **** Last is*****[" + listLogs.get(listLogs.size() - 1).toString()
-         * + "] *****Current***** " + logItem.toString()); }
-         */
         if (!keepTheLine(logItem)) {
             // logger.info("Not keep the line " + logItem.lineNumber);
             return;
         }
+        // then, let upgrade the lineNumber, this list is part of the filter area
+        lineNumberFiltered++;
+        
+        // then, not allow to save, we don't keep it (due to pagination)
+        if (!allowSave)
+            return;
+      
+       
         currentLine++;
 
         if (logParameter.filterTail) {
@@ -118,7 +123,7 @@ public class LogInformation {
 
             }
         } else {
-            if (currentLine <= (logParameter.pageNumber - 1) * logParameter.numberPerPage || currentLine > logParameter.pageNumber * logParameter.numberPerPage) {
+            if (lineNumberFiltered <= (logParameter.pageNumber - 1) * logParameter.numberPerPage || lineNumberFiltered > logParameter.pageNumber * logParameter.numberPerPage) {
                 return;
             }
         }

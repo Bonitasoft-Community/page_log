@@ -12,17 +12,12 @@ import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
-import java.util.logging.FileHandler;
-import java.util.logging.Filter;
 import java.util.logging.Handler;
 import java.util.logging.LogManager;
 import java.util.logging.Logger;
@@ -37,7 +32,7 @@ import org.json.simple.JSONValue;
 
 public class LogAccess {
 
-    private static String sdfFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+    // private static String sdfFormat = "yyyy-MM-dd'T'HH:mm:ss'Z'";
 
     private static Logger logger = Logger.getLogger(LogAccess.class.getName());
 
@@ -108,6 +103,7 @@ public class LogAccess {
             if (jsonSt == null) {
                 return new LogParameter();
             }
+            @SuppressWarnings("unchecked")
             final HashMap<String, Object> jsonHash = (HashMap<String, Object>) JSONValue.parse(jsonSt);
             if (jsonHash == null) {
                 return new LogParameter();
@@ -129,7 +125,8 @@ public class LogAccess {
             logParameter.filterShortDate = Toolbox.getBoolean(jsonHash.get("filterShortDate"), false);
             logParameter.filterTail = Toolbox.getBoolean(jsonHash.get("filterTail"), false);
             logParameter.zipanddownload = Toolbox.getListString(jsonHash.get("listdaysdownload"), null);
-            Map<String,Object> mapAnalyse = (Map) jsonHash.get("analyze" );
+            @SuppressWarnings("unchecked")
+            Map<String,Object> mapAnalyse = (Map<String,Object>) jsonHash.get("analyze" );
             try {
                 logParameter.enableAnalysisError = Toolbox.getBoolean( mapAnalyse.get("enableAnalysisError"), false);
                 logParameter.perimeter = PERIMETER.valueOf( mapAnalyse.get("perimeter").toString());
@@ -241,11 +238,12 @@ public class LogAccess {
                             continue;
 
                         final StringTokenizer st = new StringTokenizer(name, ".");
+                        @SuppressWarnings("unused")
                         final String filename = st.hasMoreTokens() ? st.nextToken() : "";
                         final String filedate = st.hasMoreTokens() ? st.nextToken() : "";
                         List<FileInformation> listFiles = (List<FileInformation>) mapLogs.get(filedate);
                         if (listFiles == null) {
-                            listFiles = new ArrayList<FileInformation>();
+                            listFiles = new ArrayList<>();
                         }
                         FileInformation infoFile = new FileInformation();
                         infoFile.fileName = name;
@@ -386,7 +384,8 @@ public class LogAccess {
             // loop on all lines now
             while (line != null) {
                 // do all calculation, just decide (or not) to save the result, according the pagination
-                logInformation.allowSave(lineNumber >= first && lineNumber < end);
+                // logInformation.allowSave(lineNumber >= first && lineNumber < end);
+                logInformation.allowSave(logInformation.lineNumberFiltered >= first && logInformation.lineNumberFiltered < end);
 
                 if (logParameter.brutResult) {
                     currentLogItem = new LogItem(logParameter);
@@ -477,7 +476,8 @@ public class LogAccess {
 
                 }
                 line = br.readLine();
-                line = new String(line.getBytes(), StandardCharsets.UTF_8);
+                if (line!=null)
+                    line = new String(line.getBytes(), StandardCharsets.UTF_8);
 
                 lineNumber++;
                 if (logParameter.logInformation && lineNumber % 500 == 0) {
@@ -498,13 +498,19 @@ public class LogAccess {
                 logInformation.listEvents.add(errorDuringDecodage);
             }
         } catch (final Exception e) {
-            logInformation.listEvents.add(new BEvent(EventReadLogFile, e, "FileName=[" + logParameter.getFileName() + "]"));
+            StringWriter sw = new StringWriter();
+            e.printStackTrace(new PrintWriter(sw));
+            String exceptionDetails = sw.toString();
+
+            logInformation.listEvents.add(new BEvent(EventReadLogFile, e, "FileName=[" + logParameter.getFileName() + "] at "+exceptionDetails));
+            logInformation.end(lineNumber);
+
         } finally {
             if (br != null) {
                 try {
                     br.close();
                 } catch (final Exception e) {
-                } ;
+                } 
             }
         }
 
@@ -613,10 +619,9 @@ public class LogAccess {
                     try {
 
                         Class<?> classHandler = handler.getClass();
-                        // I don't want to load the JBOSS class in that
-                        // circonstance
-                        Method methodeGetFile = classHandler.getMethod("getFile", null);
-                        File fileDirectory = (File) methodeGetFile.invoke(handler, null);
+                        // I don't want to load the JBOSS class in that circumstance
+                        Method methodeGetFile = classHandler.getMethod("getFile", (Class[]) null);
+                        File fileDirectory = (File) methodeGetFile.invoke(handler);
                         if (fileDirectory != null) {
                             try {
                                 String path;
