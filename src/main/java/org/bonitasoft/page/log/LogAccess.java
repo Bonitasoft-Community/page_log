@@ -9,13 +9,20 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.lang.reflect.Method;
+import java.net.InetAddress;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 import java.util.logging.Handler;
@@ -53,9 +60,14 @@ public class LogAccess {
      * *******
      */
 
-    public enum PERIMETER { ERROR, WARNING };
-    public enum POLICY { TOP10, TOP100, ALL };
-    
+    public enum PERIMETER {
+        ERROR, WARNING
+    };
+
+    public enum POLICY {
+        TOP10, TOP100, ALL
+    };
+
     /**
      * logparametres
      */
@@ -77,13 +89,13 @@ public class LogAccess {
         /**
          * if true, the analysis of error is enable
          */
-        public boolean enableAnalysisError=false;
+        public boolean enableAnalysisError = false;
 
         public boolean analysisCompactBasedOnError;
         // ERROR or WARNING 
-        
-        public PERIMETER perimeter = PERIMETER.ERROR; 
-        public POLICY policy = POLICY.ALL; 
+
+        public PERIMETER perimeter = PERIMETER.ERROR;
+        public POLICY policy = POLICY.ALL;
 
         public List<String> zipanddownload;
 
@@ -126,16 +138,17 @@ public class LogAccess {
             logParameter.filterTail = Toolbox.getBoolean(jsonHash.get("filterTail"), false);
             logParameter.zipanddownload = Toolbox.getListString(jsonHash.get("listdaysdownload"), null);
             @SuppressWarnings("unchecked")
-            Map<String,Object> mapAnalyse = (Map<String,Object>) jsonHash.get("analyze" );
+            Map<String, Object> mapAnalyse = (Map<String, Object>) jsonHash.get("analyze");
             try {
-                logParameter.enableAnalysisError = Toolbox.getBoolean( mapAnalyse.get("enableAnalysisError"), false);
-                logParameter.perimeter = PERIMETER.valueOf( mapAnalyse.get("perimeter").toString());
-                logParameter.policy = POLICY.valueOf( mapAnalyse.get("policy").toString());
+                logParameter.enableAnalysisError = Toolbox.getBoolean(mapAnalyse.get("enableAnalysisError"), false);
+                logParameter.perimeter = PERIMETER.valueOf(mapAnalyse.get("perimeter").toString());
+                logParameter.policy = POLICY.valueOf(mapAnalyse.get("policy").toString());
 
-            } catch(Exception e )
-            
-            {}
-            
+            } catch (Exception e)
+
+            {
+            }
+
             return logParameter;
         }
     }
@@ -176,7 +189,9 @@ public class LogAccess {
 
         public String fileName;
         public String pathName;
-
+        public long fileSize;
+       public boolean isVisible;
+       
         public String getFileName() {
             return fileName;
         }
@@ -189,19 +204,21 @@ public class LogAccess {
             return pathName + File.separatorChar + fileName;
         }
 
-        public Map<String, String> getMap() {
-            Map<String, String> map = new HashMap<String, String>();
-            map.put("fileName", getFileName());
-            map.put("pathName", getPathName());
-            map.put("completeFileName", getCompleteFileName());
+        public Map<String, Object> getMap() {
+            Map<String, Object> map = new HashMap<>();
+            map.put( "fileName", getFileName());
+            map.put( "pathName", getPathName());
+            map.put( "completeFileName", getCompleteFileName());
+            map.put( "fileSize", sizeToHuman( fileSize));
+            map.put( "isVisible", isVisible);
             return map;
 
         }
     }
 
-    public static class filesInformation {
+    public static class FilesInformation {
 
-        final Map<String, List<FileInformation>> mapLogs = new HashMap<String, List<FileInformation>>();
+        final Map<String, List<FileInformation>> mapLogs = new HashMap<>();
 
     }
 
@@ -215,26 +232,33 @@ public class LogAccess {
     public static Map<String, List<FileInformation>> getFilesInfoLog() {
         logger.info("LogAccess: getFilesLog");
 
-        final List<String> listLogPath = getLogPath();
-        final Map<String, List<FileInformation>> mapLogs = new HashMap<String, List<FileInformation>>();
+        final List<LogRessource> listLogPath = getLogPath();
+        final Map<String, List<FileInformation>> mapLogs = new HashMap<>();
         if (listLogPath == null) {
             return mapLogs;
         }
 
-        for (String logPath : listLogPath) {
+        Set<String> uniqPath=new HashSet<>();
+        for (LogRessource logPath : listLogPath) {
             try {
-                final File folder = new File(logPath);
-                logger.info("LogAccess: listFiles=" + folder.getCanonicalPath());
-                final File[] listOfFiles = folder.listFiles();
+                 if (logPath.folder==null)
+                     continue;
+                 
+                
+                if (uniqPath.contains(logPath.folder.getAbsolutePath()))
+                    continue;
+                uniqPath.add(logPath.folder.getAbsolutePath());
+                logger.info("LogAccess: listFiles=" + logPath.folder.getCanonicalPath());
+                final File[] listOfFiles = logPath.folder.listFiles();
                 if (listOfFiles == null) {
-                    logger.info("LogAccess: no file under =" + folder.getCanonicalPath());
+                    logger.info("LogAccess: no file under =" + logPath.folder.getCanonicalPath());
                     continue;
                 }
 
                 for (int i = 0; i < listOfFiles.length; i++) {
                     if (listOfFiles[i].isFile()) {
                         final String name = listOfFiles[i].getName();
-                        if (!name.endsWith(".log"))
+                        if (!name.endsWith(".log") && ! name.endsWith(".log.gz"))
                             continue;
 
                         final StringTokenizer st = new StringTokenizer(name, ".");
@@ -247,7 +271,10 @@ public class LogAccess {
                         }
                         FileInformation infoFile = new FileInformation();
                         infoFile.fileName = name;
-                        infoFile.pathName = logPath;
+                        infoFile.pathName = logPath.folder.getAbsolutePath();
+                        Path path = listOfFiles[i].toPath();
+                        infoFile.fileSize = Files.size(path);
+                        infoFile.isVisible = name.endsWith(".log");
                         listFiles.add(infoFile);
 
                         mapLogs.put(filedate, listFiles);
@@ -272,31 +299,33 @@ public class LogAccess {
         return sortMapLogs;
     }
 
-    
     private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+
     /**
      * Get all files for a particular date
+     * 
      * @param dateOfTheDay
      * @return
      */
-    public static List<FileInformation> getFilesInfoLogOneDay( Date dateOfTheDay ) {
-         Map<String, List<FileInformation>> listAllFiles = getFilesInfoLog();
-         // Expected a structure
-         String dateString = sdf.format( dateOfTheDay);
-         return listAllFiles.get(dateString);
+    public static List<FileInformation> getFilesInfoLogOneDay(Date dateOfTheDay) {
+        Map<String, List<FileInformation>> listAllFiles = getFilesInfoLog();
+        // Expected a structure
+        String dateString = sdf.format(dateOfTheDay);
+        return listAllFiles.get(dateString);
     }
+
     /**
      * return the same information for JSON
      * 
      * @return
      */
-    public static Map<String, List<Map<String, String>>> getFilesLog() {
+    public static Map<String, List<Map<String, Object>>> getFilesLog() {
         final Map<String, List<FileInformation>> infoLogs = getFilesInfoLog();
         // now translate
         logger.fine("LogAccess.getFilesLog : transform the information for JSON");
-        final Map<String, List<Map<String, String>>> mapLogs = new HashMap<String, List<Map<String, String>>>();
+        final Map<String, List<Map<String, Object>>> mapLogs = new TreeMap<>();
         for (String key : infoLogs.keySet()) {
-            List<Map<String, String>> listFiles = new ArrayList<Map<String, String>>();
+            List<Map<String, Object>> listFiles = new ArrayList<>();
             mapLogs.put(key, listFiles);
             for (FileInformation fileInformation : infoLogs.get(key)) {
                 listFiles.add(fileInformation.getMap());
@@ -305,18 +334,12 @@ public class LogAccess {
         return mapLogs;
     }
 
-    /*
-     * *************************************************************************
-     * *******
-     */
-    /*                                                                                  */
+    /* ************************************************************************ */
+    /*                                                                          */
     /* GetLog */
-    /*                                                                                  */
-    /*                                                                                  */
-    /*
-     * *************************************************************************
-     * *******
-     */
+    /*                                                                          */
+    /*                                                                          */
+    /* ************************************************************************ */
 
     /**
      * Parse the log file and return all information inside
@@ -344,13 +367,15 @@ public class LogAccess {
                 logInformation.logFileName = "bonita." + sdf.format(new Date()) + ".log";
                 logger.fine("LogAccess.getLog : Search Current Log based on file [" + logInformation.logFileName + "] or [server.log]");
 
-                List<String> listPath = getLogPath();
-                for (String logPath : listPath) {
-                    File file = new File(logPath + File.separatorChar + logInformation.logFileName);
+                List<LogRessource> listPath = getLogPath();
+                for (LogRessource logRessource : listPath) {
+                    if (logRessource.folder == null )
+                        continue;
+                    File file = new File(logRessource.folder.getAbsolutePath() + File.separatorChar + logInformation.logFileName);
                     if (file.exists())
                         logInformation.completeLogFileName = file.getAbsolutePath();
                     else {
-                        file = new File(logPath + File.separatorChar + "server.log");
+                        file = new File(logRessource.folder.getAbsolutePath() + File.separatorChar + "server.log");
                         if (file.exists())
                             logInformation.completeLogFileName = file.getAbsolutePath();
                     }
@@ -384,7 +409,6 @@ public class LogAccess {
             // loop on all lines now
             while (line != null) {
                 // do all calculation, just decide (or not) to save the result, according the pagination
-                // logInformation.allowSave(lineNumber >= first && lineNumber < end);
                 logInformation.allowSave(logInformation.lineNumberFiltered >= first && logInformation.lineNumberFiltered < end);
 
                 if (logParameter.brutResult) {
@@ -476,7 +500,7 @@ public class LogAccess {
 
                 }
                 line = br.readLine();
-                if (line!=null)
+                if (line != null)
                     line = new String(line.getBytes(), StandardCharsets.UTF_8);
 
                 lineNumber++;
@@ -502,7 +526,7 @@ public class LogAccess {
             e.printStackTrace(new PrintWriter(sw));
             String exceptionDetails = sw.toString();
 
-            logInformation.listEvents.add(new BEvent(EventReadLogFile, e, "FileName=[" + logParameter.getFileName() + "] at "+exceptionDetails));
+            logInformation.listEvents.add(new BEvent(EventReadLogFile, e, "FileName=[" + logParameter.getFileName() + "] at " + exceptionDetails));
             logInformation.end(lineNumber);
 
         } finally {
@@ -510,7 +534,7 @@ public class LogAccess {
                 try {
                     br.close();
                 } catch (final Exception e) {
-                } 
+                }
             }
         }
 
@@ -528,17 +552,34 @@ public class LogAccess {
     /*                                                                      */
     /* ******************************************************************** */
     /**
+     * @param path
+     * @return
+     */
+    public static class LogRessource {
+        public File folder = null;
+        public String origin;
+        public String error;
+        
+        public LogRessource(String origin, File folder) {
+            this.origin = origin;
+            this.folder = folder;
+        }
+        public LogRessource(String error) {
+            this.error = error;
+        }
+    }
+    /**
      * return All paths where logs are
      *
      * @return
      */
-    protected static List<String> getLogPath() {
+    protected static List<LogRessource> getLogPath() {
 
         // nota: by then handler, we may have nothing, because the handler may
         // be attach to a parent
         // secondly, even if the handler is a FileHandler, it will not give its
         // directory :-(
-        List<String> listPath = new ArrayList<String>();
+        List<LogRessource> listPath = new ArrayList<>();
 
         getFilePathThomcat(listPath);
         getFilePathJboss(listPath);
@@ -546,13 +587,21 @@ public class LogAccess {
         return listPath;
     }
 
+    public static List<String> getMapLogPath(List<LogRessource> listLogPath) {
+        // transform the LogPath to a List of String, do not keep the error
+        List<String> listPath = new ArrayList();
+        for (LogRessource logRessource : listLogPath) {
+            listPath.add(logRessource.origin+":"+logRessource.folder.getAbsolutePath());
+        }
+        return listPath;
+    }
     /**
      * get the file when the logging is a Java.util.logging (TOMCAT usage for
      * example)
      * 
      * @return
      */
-    protected static void getFilePathThomcat(List<String> listPath) {
+    protected static void getFilePathThomcat(List<LogRessource> listPath) {
         LogManager logManager = LogManager.getLogManager();
         String handlers = logManager.getProperty("handlers");
 
@@ -568,7 +617,7 @@ public class LogAccess {
                     File fileDirectory = new File(directory);
                     try {
                         if (!listPath.contains(fileDirectory.getCanonicalPath()))
-                            listPath.add(fileDirectory.getCanonicalPath());
+                            listPath.add( new LogRessource("(HAN)", fileDirectory));
 
                     } catch (IOException e) {
                         logger.severe("LogAccess.getFilePathThomcat: getCanonicalPath Error  [" + fileDirectory.getAbsolutePath() + "] file[" + fileDirectory.getName() + "] error[" + e.toString() + "]");
@@ -577,17 +626,58 @@ public class LogAccess {
                 if (fileName != null) {
                     File fileFileName = new File(fileName);
                     if (!listPath.contains(fileFileName.getParent()))
-                        listPath.add(fileFileName.getParent());
+                        listPath.add( new LogRessource("(HAN)", new File(fileFileName.getParent())));
 
                 }
             }
         }
+
+        // bonita Cloud: nothing before works...
+        URL url = LogAccess.class.getResource("");
+        // file:/D:/bonita/BPM-SP-7.11.2/workspace/tomcat/server/temp/bonita_portal_4648@Dragon-Pierre-Yves/tenants/1/custompage_log1607562859040/bonita-log-2.8.0.jar693201804784843185.tmp!/org/bonitasoft/page/log/
+        String urlString = url.getPath();
+        // remove file:
+        if (urlString.startsWith("file:"))
+            urlString = urlString.substring("file:".length());
+
+        // search /tomcat/server
+        int pos = urlString.toLowerCase().indexOf("server");
+        if (pos != -1) {
+            urlString = urlString.substring(0, pos) + "server/logs";
+            listPath.add( new LogRessource("(RES):", new File(urlString)));
+        }
+
+        // Hardcoded BonitaCloud
+        // ${baseDir}/${env:HOSTNAME}/bonita.log
+        String baseDir = "/opt/bonita_run/logs";
+        boolean foundHostname = false;
+        try {
+
+            String hostName = InetAddress.getLocalHost().getHostName();
+            listPath.add( new LogRessource("(BCL)", new File( baseDir + "/" + hostName)));
+            foundHostname = true;
+        } catch (Exception e) {
+            listPath.add( new LogRessource("(BCL) Exception baseDir:[" + baseDir + "] " + e.getMessage()));
+            // then check all subdirectory here
+        }
+        if (!foundHostname) {
+            try {
+                File baseDirFile = new File(baseDir);
+                for (File subDir : baseDirFile.listFiles()) {
+                    listPath.add( new LogRessource("(BCL)", subDir));
+                }
+            } catch (Exception e) {
+                listPath.add( new LogRessource("(BCL):Exception SubbaseDir:[" + baseDir + "] " + e.getMessage()));
+            }
+        }
+
+        //------------------ Catalina
         String logPathVariable = System.getProperty("catalina.home");
         if (logPathVariable != null) {
             File fileDirectory = new File(logPathVariable);
             try {
                 if (!listPath.contains(fileDirectory.getCanonicalPath()))
-                    listPath.add(fileDirectory.getCanonicalPath());
+                    listPath.add( new LogRessource("(CAT):", fileDirectory));
 
             } catch (IOException e) {
                 logger.severe("LogAccess.getFilePathThomcat: getCanonicalPath Error  [" + fileDirectory.getAbsolutePath() + "] file[" + fileDirectory.getName() + "] error[" + e.toString() + "]");
@@ -603,7 +693,7 @@ public class LogAccess {
     /**
      * in JBOSS, the fileHandler has a "getFile"
      */
-    protected static void getFilePathJboss(List<String> listPath) {
+    protected static void getFilePathJboss(List<LogRessource> listPath) {
         LogManager logManager = LogManager.getLogManager();
         Logger loggerBonitasoft = Logger.getLogger("org.bonitasoft");
         int loopParent = -1;
@@ -630,7 +720,7 @@ public class LogAccess {
                                 else
                                     path = fileDirectory.getParent();
                                 if (!listPath.contains(path))
-                                    listPath.add(path);
+                                    listPath.add( new LogRessource("(JAN):", new File( path)));
                                 logger.fine("LogAccess.getFilePathJboss Handler : file name=[" + fileDirectory.getName() + "] path=" + fileDirectory.getPath() + "] getCanonicalPath=" + fileDirectory.getCanonicalPath() + "]  getParent=" + fileDirectory.getParent() + "]");
                             } catch (Exception e) {
                                 logger.severe("LogAccess.getFilePathThomcat: getCanonicalPath Error  [" + fileDirectory.getAbsolutePath() + "] file[" + fileDirectory.getName() + "] error[" + e.toString() + "]");
@@ -650,8 +740,6 @@ public class LogAccess {
 
         }
         logger.info("LogAccess.getFilePathJboss: end detection listPath=" + listPath);
-        return;
-
     }
 
     /* ******************************************************************** */
@@ -828,4 +916,21 @@ public class LogAccess {
 
     }
 
+    private static String sizeToHuman( long fileSize ) {
+        StringBuilder result = new StringBuilder();
+        long rest=fileSize;
+        if (rest / (1024*1024*1024) > 0) {
+            result.append((rest / (1024*1024*1024))+" Gb ");
+            rest = rest % (1024*1024*1024);
+        }
+        if (rest / (1024*1024) > 0) {
+            result.append((rest / (1024*1024))+" Mb ");
+            rest = rest % (1024*1024);
+        }
+        if (rest / 1024 > 0) {
+            result.append((rest/2014)+" Kb ");
+            rest = rest % 1024;
+        }
+        return result.toString();
+    }
 }

@@ -46,7 +46,7 @@
 
 	<center>
 	<table>
-		<tr><td><h1>Logs on server</h1></td><td style="font-size:0.8em;vertical-align:bottom"> V2.7.0</span></td>
+		<tr><td><h1>Logs on server</h1></td><td style="font-size:0.8em;vertical-align:bottom"> V2.8.0</span></td>
 		</tr>
 	</table>
 	</center>
@@ -105,7 +105,12 @@
 						<tr ng-repeat="(key, val) in ctrl.listfileslog track by $index">
 							<td><input type="checkbox" ng-model="ctrl.listfilesselected[ key ]" title="All files on the {{key}} are selected, then ask the download">&nbsp;&nbsp;{{key}}</input></td>
 							<td ng-repeat="logfile in val track by $index">
-								<button ng-click="ctrl.getLog( logfile );ctrl.navbaractiv='logFile'" class="{{ctrl.getClassLogFile(logfile.fileName)}}" title="{{logfile.completeFileName}}">&nbsp;{{logfile.fileName}}&nbsp;</button>
+								<div ng-if="logfile.isVisible">
+									<button ng-click="ctrl.getLog( logfile );ctrl.navbaractiv='logFile'" class="{{ctrl.getClassLogFile(logfile.fileName)}}" title="{{logfile.completeFileName}}">&nbsp;{{logfile.fileName}} ({{logfile.fileSize}})&nbsp;</button>
+								</div>
+								<div ng-if=" ! logfile.isVisible">
+									&nbsp;{{logfile.fileName}} ({{logfile.fileSize}})&nbsp;
+								</div>
 								&nbsp;&nbsp;
 							
 							</td>

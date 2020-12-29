@@ -94,7 +94,7 @@ public class Actions {
                              }
              
                 actionAnswer.responseMap.put("listfileslog", LogAccess.getFilesLog());
-                actionAnswer.responseMap.put("logpath", LogAccess.getLogPath());
+                actionAnswer.responseMap.put("logpath", LogAccess.getMapLogPath( LogAccess.getLogPath()) );
             }
 	            
 			else if ("getLog".equals(action))
@@ -129,12 +129,7 @@ public class Actions {
 			}	
 			else if ("zipanddownload".equals(action))
 			{
-                //Make sure no action is executed if the CSRF protection is active and the request header is invalid
-                if (! TokenValidator.checkCSRFToken(request, response)) {
-                                 actionAnswer.isResponseMap=false;
-                                 return actionAnswer;
-                             }
-             
+                // Zip and download is a GET, and a direct access in the HTML page.
 				actionAnswer.isManaged=true;
 				response.addHeader("content-disposition", "attachment; filename=LogFiles.zip");
 	            response.addHeader("content-type", "application/zip");
