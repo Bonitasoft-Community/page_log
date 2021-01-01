@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -163,7 +164,7 @@ public class LogAccess {
     // handled.
 
     public enum FormatLineLog {
-        ONELINE, TWOLINES
+        ONELINE, TWOLINES, BONITACLOUD
     }
 
     public static class FormatLog {
@@ -190,8 +191,8 @@ public class LogAccess {
         public String fileName;
         public String pathName;
         public long fileSize;
-       public boolean isVisible;
-       
+        public boolean isVisible;
+
         public String getFileName() {
             return fileName;
         }
@@ -206,11 +207,11 @@ public class LogAccess {
 
         public Map<String, Object> getMap() {
             Map<String, Object> map = new HashMap<>();
-            map.put( "fileName", getFileName());
-            map.put( "pathName", getPathName());
-            map.put( "completeFileName", getCompleteFileName());
-            map.put( "fileSize", sizeToHuman( fileSize));
-            map.put( "isVisible", isVisible);
+            map.put("fileName", getFileName());
+            map.put("pathName", getPathName());
+            map.put("completeFileName", getCompleteFileName());
+            map.put("fileSize", sizeToHuman(fileSize));
+            map.put("isVisible", isVisible);
             return map;
 
         }
@@ -238,13 +239,12 @@ public class LogAccess {
             return mapLogs;
         }
 
-        Set<String> uniqPath=new HashSet<>();
+        Set<String> uniqPath = new HashSet<>();
         for (LogRessource logPath : listLogPath) {
             try {
-                 if (logPath.folder==null)
-                     continue;
-                 
-                
+                if (logPath.folder == null)
+                    continue;
+
                 if (uniqPath.contains(logPath.folder.getAbsolutePath()))
                     continue;
                 uniqPath.add(logPath.folder.getAbsolutePath());
@@ -257,14 +257,25 @@ public class LogAccess {
 
                 for (int i = 0; i < listOfFiles.length; i++) {
                     if (listOfFiles[i].isFile()) {
-                        final String name = listOfFiles[i].getName();
-                        if (!name.endsWith(".log") && ! name.endsWith(".log.gz"))
+                        String name = listOfFiles[i].getName();
+                        if (!name.endsWith(".log") && !name.endsWith(".log.gz"))
                             continue;
+
+                        // Bundle       : bonita.2020-12-31.log
+                        // BonitaCloud  : bonita-2020-12-22-1.log.gz
+                        //                  bonita.log 
+                        //  !!!!
+                        if (name.startsWith("bonita-"))
+                            name = "bonita." + name.substring("bonita-".length());
 
                         final StringTokenizer st = new StringTokenizer(name, ".");
                         @SuppressWarnings("unused")
                         final String filename = st.hasMoreTokens() ? st.nextToken() : "";
-                        final String filedate = st.hasMoreTokens() ? st.nextToken() : "";
+                        String filedate = st.hasMoreTokens() ? st.nextToken() : "";
+                        if (filedate.isEmpty() || filedate.equals("log")) {
+                            Calendar c = Calendar.getInstance();
+                            filedate = c.get(Calendar.YEAR) + "-" + (c.get(Calendar.MONTH) + 1) + "-" + c.get(Calendar.DAY_OF_MONTH);
+                        }
                         List<FileInformation> listFiles = (List<FileInformation>) mapLogs.get(filedate);
                         if (listFiles == null) {
                             listFiles = new ArrayList<>();
@@ -369,7 +380,7 @@ public class LogAccess {
 
                 List<LogRessource> listPath = getLogPath();
                 for (LogRessource logRessource : listPath) {
-                    if (logRessource.folder == null )
+                    if (logRessource.folder == null)
                         continue;
                     File file = new File(logRessource.folder.getAbsolutePath() + File.separatorChar + logInformation.logFileName);
                     if (file.exists())
@@ -392,7 +403,7 @@ public class LogAccess {
             // Attention : add the currentlogitem at the last moment
             LogItem currentLogItem = null;
             FormatLog formatLog = new FormatLog();
-            String detectDate = null;
+            String markerLineIsANewLogItem = null;
 
             logInformation.start();
             br = new BufferedReader(new FileReader(logInformation.completeLogFileName));
@@ -419,18 +430,25 @@ public class LogAccess {
                 } else {
                     try {
                         // manage the line - no date were detected ever, so
-                        if (detectDate == null) {
+                        if (markerLineIsANewLogItem == null) {
+                            formatLog = detectFormat(formatLog, logParameter, line);
+
                             // still trying to find a date
-                            final int posBlank = line.indexOf(" ");
-                            if (posBlank == -1) {
-                                logInformation.listEvents.add(new BEvent(EventInvalidLogFormat, "on line " + lineNumber));
+                            if (formatLog.formatLineLog == FormatLineLog.BONITACLOUD) {
+                                // we get the first character
+                                markerLineIsANewLogItem = line.substring(0, 10);
                             } else {
-                                detectDate = line.substring(0, posBlank);
+                                final int posBlank = line.indexOf(" ");
+                                if (posBlank == -1) {
+                                    logInformation.listEvents.add(new BEvent(EventInvalidLogFormat, "on line " + lineNumber));
+                                } else {
+                                    markerLineIsANewLogItem = line.substring(0, posBlank);
+                                }
                             }
                         }
 
                         // do the decision now
-                        if (detectDate == null) {
+                        if (markerLineIsANewLogItem == null) {
                             if (currentLogItem != null) {
                                 logInformation.addLogItem(currentLogItem);
                             }
@@ -440,7 +458,7 @@ public class LogAccess {
                             currentLogItem.addContent(line);
 
                         } else { // we can get the structure
-                            if (line.startsWith(detectDate)) {
+                            if (line.startsWith(markerLineIsANewLogItem)) {
                                 // Two kind of format :
                                 // 2017-02-27 09:03:47.992 -0800
                                 // org.bonitasoft.tomcat.H2Listener
@@ -473,7 +491,7 @@ public class LogAccess {
                                     currentLogItem.setDate(line.substring(0, formatLog.posEndDate));
                                     currentLogItem.firstLine = true;
                                     final int posFirstBlanck = line.indexOf(" ", formatLog.posEndDate + 1);
-                                    currentLogItem.localisation = posFirstBlanck == -1 ? line.substring(formatLog.posEndDate + 1) : line.substring(posFirstBlanck + 1);
+                                    currentLogItem.setLocalisation(posFirstBlanck == -1 ? line.substring(formatLog.posEndDate + 1) : line.substring(posFirstBlanck + 1));
                                 } else {
                                     currentLogItem.firstLine = false;
                                     decodeLine(formatLog, currentLogItem, line);
@@ -556,18 +574,21 @@ public class LogAccess {
      * @return
      */
     public static class LogRessource {
+
         public File folder = null;
         public String origin;
         public String error;
-        
+
         public LogRessource(String origin, File folder) {
             this.origin = origin;
             this.folder = folder;
         }
+
         public LogRessource(String error) {
             this.error = error;
         }
     }
+
     /**
      * return All paths where logs are
      *
@@ -591,10 +612,11 @@ public class LogAccess {
         // transform the LogPath to a List of String, do not keep the error
         List<String> listPath = new ArrayList();
         for (LogRessource logRessource : listLogPath) {
-            listPath.add(logRessource.origin+":"+logRessource.folder.getAbsolutePath());
+            listPath.add(logRessource.origin + ":" + logRessource.folder.getAbsolutePath());
         }
         return listPath;
     }
+
     /**
      * get the file when the logging is a Java.util.logging (TOMCAT usage for
      * example)
@@ -617,7 +639,7 @@ public class LogAccess {
                     File fileDirectory = new File(directory);
                     try {
                         if (!listPath.contains(fileDirectory.getCanonicalPath()))
-                            listPath.add( new LogRessource("(HAN)", fileDirectory));
+                            listPath.add(new LogRessource("(HAN)", fileDirectory));
 
                     } catch (IOException e) {
                         logger.severe("LogAccess.getFilePathThomcat: getCanonicalPath Error  [" + fileDirectory.getAbsolutePath() + "] file[" + fileDirectory.getName() + "] error[" + e.toString() + "]");
@@ -626,7 +648,7 @@ public class LogAccess {
                 if (fileName != null) {
                     File fileFileName = new File(fileName);
                     if (!listPath.contains(fileFileName.getParent()))
-                        listPath.add( new LogRessource("(HAN)", new File(fileFileName.getParent())));
+                        listPath.add(new LogRessource("(HAN)", new File(fileFileName.getParent())));
 
                 }
             }
@@ -644,7 +666,7 @@ public class LogAccess {
         int pos = urlString.toLowerCase().indexOf("server");
         if (pos != -1) {
             urlString = urlString.substring(0, pos) + "server/logs";
-            listPath.add( new LogRessource("(RES):", new File(urlString)));
+            listPath.add(new LogRessource("(RES):", new File(urlString)));
         }
 
         // Hardcoded BonitaCloud
@@ -654,20 +676,20 @@ public class LogAccess {
         try {
 
             String hostName = InetAddress.getLocalHost().getHostName();
-            listPath.add( new LogRessource("(BCL)", new File( baseDir + "/" + hostName)));
+            listPath.add(new LogRessource("(BCL)", new File(baseDir + "/" + hostName)));
             foundHostname = true;
         } catch (Exception e) {
-            listPath.add( new LogRessource("(BCL) Exception baseDir:[" + baseDir + "] " + e.getMessage()));
+            listPath.add(new LogRessource("(BCL) Exception baseDir:[" + baseDir + "] " + e.getMessage()));
             // then check all subdirectory here
         }
         if (!foundHostname) {
             try {
                 File baseDirFile = new File(baseDir);
                 for (File subDir : baseDirFile.listFiles()) {
-                    listPath.add( new LogRessource("(BCL)", subDir));
+                    listPath.add(new LogRessource("(BCL)", subDir));
                 }
             } catch (Exception e) {
-                listPath.add( new LogRessource("(BCL):Exception SubbaseDir:[" + baseDir + "] " + e.getMessage()));
+                listPath.add(new LogRessource("(BCL):Exception SubbaseDir:[" + baseDir + "] " + e.getMessage()));
             }
         }
 
@@ -677,7 +699,7 @@ public class LogAccess {
             File fileDirectory = new File(logPathVariable);
             try {
                 if (!listPath.contains(fileDirectory.getCanonicalPath()))
-                    listPath.add( new LogRessource("(CAT):", fileDirectory));
+                    listPath.add(new LogRessource("(CAT):", fileDirectory));
 
             } catch (IOException e) {
                 logger.severe("LogAccess.getFilePathThomcat: getCanonicalPath Error  [" + fileDirectory.getAbsolutePath() + "] file[" + fileDirectory.getName() + "] error[" + e.toString() + "]");
@@ -720,7 +742,7 @@ public class LogAccess {
                                 else
                                     path = fileDirectory.getParent();
                                 if (!listPath.contains(path))
-                                    listPath.add( new LogRessource("(JAN):", new File( path)));
+                                    listPath.add(new LogRessource("(JAN):", new File(path)));
                                 logger.fine("LogAccess.getFilePathJboss Handler : file name=[" + fileDirectory.getName() + "] path=" + fileDirectory.getPath() + "] getCanonicalPath=" + fileDirectory.getCanonicalPath() + "]  getParent=" + fileDirectory.getParent() + "]");
                             } catch (Exception e) {
                                 logger.severe("LogAccess.getFilePathThomcat: getCanonicalPath Error  [" + fileDirectory.getAbsolutePath() + "] file[" + fileDirectory.getName() + "] error[" + e.toString() + "]");
@@ -798,10 +820,23 @@ public class LogAccess {
 
     // 2017-11-09 16:36:24.183 -0400 INFO
     // 2017-11-08 07:55:25,359 INFO
+
+    // Bonita Cloud;
+    // 2020-12-31T01:09:24,448+0100 [http-nio-8080-exec-9|136] INFO  org.bonitasoft.page.log.LogAccess
     private static FormatLog detectFormatDate(FormatLog formatLog, String line) {
         if (formatLog.posEndDate >= 0)
             return formatLog;
         int posEndDay = line.indexOf(" ");
+        if (posEndDay > 0) {
+            try {
+                LogItem.sdfBonitaCloud.parse(line.substring(0, posEndDay));
+                formatLog.formatLineLog = FormatLineLog.BONITACLOUD;
+                return formatLog;
+            } catch (Exception e) {
+
+            }
+        }
+
         int posEndHour = posEndDay == -1 ? -1 : line.indexOf(" ", posEndDay + 1);
         int posEndNextWord = posEndHour == -1 ? -1 : line.indexOf(" ", posEndHour + 1);
         if (posEndHour != -1 && posEndNextWord != -1) {
@@ -831,11 +866,33 @@ public class LogAccess {
         if (logParameter.logInformation) {
             logger.info("LogAccess.detectFormat on the line [" + line + "]");
         }
+
+        final int posEndDay = line.indexOf(" ");
+        if (posEndDay > 0) {
+            try {
+                LogItem.sdfBonitaCloud.parse(line.substring(0, posEndDay));
+                formatLog.formatLineLog = FormatLineLog.BONITACLOUD;
+                return formatLog;
+            } catch (Exception e) {
+
+            }
+        }
+
+        // expected 31-Dec-2020 11:00:22.097 INFOS : move to the next date then
+        formatLog.posEndDate = line.indexOf(" ");
+        if (formatLog.posEndDate > 0)
+            formatLog.posEndDate = line.indexOf(" ", formatLog.posEndDate + 1);
+        if (formatLog.posEndDate == -1) {
+            formatLog.formatLineLog = FormatLineLog.TWOLINES;
+            return formatLog;
+        }
+
         final int posLevel = line.indexOf(" ", formatLog.posEndDate + 1);
         if (posLevel == -1) {
             formatLog.formatLineLog = FormatLineLog.TWOLINES;
             return formatLog;
         }
+
         String level = line.substring(formatLog.posEndDate, posLevel);
 
         // if the text is somethink like INFO, INFOS: SEVERE then this is a
@@ -844,7 +901,7 @@ public class LogAccess {
         // a level.
         if (level.endsWith(":"))
             level = level.substring(0, level.length() - 1);
-        level = level.toUpperCase();
+        level = level.toUpperCase().trim();
         if (LogInformation.listWarnings.contains(level)
                 || LogInformation.listErrors.contains(level)
                 || LogInformation.listInfos.contains(level)
@@ -876,15 +933,33 @@ public class LogAccess {
         // flowNodeInstanceId = 11040113, connectorDefinitionName = Post NF job
         // event] failed. The failure will be handled.
         int beginContent = 0;
-        if (FormatLineLog.ONELINE.equals(formatLog.formatLineLog)) {
+        if (FormatLineLog.BONITACLOUD.equals(formatLog.formatLineLog)) {
+            // Bonita Cloud;
+            // 2020-12-31T01:09:24,448+0100 [http-nio-8080-exec-9|136] INFO  org.bonitasoft.page.log.LogAccess
+            StringTokenizer st = new StringTokenizer(line, " ");
+            String dateSt = st.hasMoreTokens() ? st.nextToken() : "";
+            String threadSt = st.hasMoreTokens() ? st.nextToken() : "";
+            String levelSt = st.hasMoreTokens() ? st.nextToken() : "";
+            String localisationSt = st.hasMoreTokens() ? st.nextToken() : "";
+            String messageSt = st.hasMoreTokens() ? st.nextToken() : "";
+            try {
+                logItem.setDate(LogItem.sdfBonitaCloud.parse(dateSt));
+            } catch (Exception e) {
+            } ;
+
+            logItem.setLevel(levelSt);
+            logItem.setLocalisation(localisationSt);
+            logItem.addContent(messageSt);
+
+        } else if (FormatLineLog.ONELINE.equals(formatLog.formatLineLog)) {
             logItem.setDate(line.substring(0, formatLog.posEndDate));
-            final int pos = line.indexOf(" ", formatLog.posEndDate);
+            final int pos = line.indexOf(" ", formatLog.posEndDate + 1);
             if (pos != -1) {
                 logItem.setLevel(line.substring(formatLog.posEndDate, pos));
 
                 final int posLoca = line.indexOf(" ", pos + 1);
                 if (posLoca != -1) {
-                    logItem.localisation = line.substring(pos + 1, posLoca);
+                    logItem.setLocalisation(line.substring(pos + 1, posLoca));
                 }
                 beginContent = posLoca == -1 ? pos + 1 : posLoca + 1;
             } else {
@@ -916,19 +991,19 @@ public class LogAccess {
 
     }
 
-    private static String sizeToHuman( long fileSize ) {
+    private static String sizeToHuman(long fileSize) {
         StringBuilder result = new StringBuilder();
-        long rest=fileSize;
-        if (rest / (1024*1024*1024) > 0) {
-            result.append((rest / (1024*1024*1024))+" Gb ");
-            rest = rest % (1024*1024*1024);
+        long rest = fileSize;
+        if (rest / (1024 * 1024 * 1024) > 0) {
+            result.append((rest / (1024 * 1024 * 1024)) + " Gb ");
+            rest = rest % (1024 * 1024 * 1024);
         }
-        if (rest / (1024*1024) > 0) {
-            result.append((rest / (1024*1024))+" Mb ");
-            rest = rest % (1024*1024);
+        if (rest / (1024 * 1024) > 0) {
+            result.append((rest / (1024 * 1024)) + " Mb ");
+            rest = rest % (1024 * 1024);
         }
         if (rest / 1024 > 0) {
-            result.append((rest/2014)+" Kb ");
+            result.append((rest / 2014) + " Kb ");
             rest = rest % 1024;
         }
         return result.toString();

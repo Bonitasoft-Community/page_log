@@ -124,7 +124,7 @@ public class LogAnalysisSynthese {
             listSynthese.add(mapItem);
             mapItem.put("count", item.count);
 
-            mapItem.put("datest", item.logItem.dateSt);
+            mapItem.put("datest", item.logItem.getDateSt());
             mapItem.put("lin", item.logItem.lineNumber);
             
             if (item.logItem.processDefinitionId == null) {

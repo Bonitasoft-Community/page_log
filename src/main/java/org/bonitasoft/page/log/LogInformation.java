@@ -192,7 +192,7 @@ public class LogInformation {
             doKeepTheLine = logItem.isError();
         }
         if (doKeepTheLine && logParameter.filterText != null) {
-            doKeepTheLine = logItem.content.indexOf(logParameter.filterText) != -1 || logItem.localisation.indexOf(logParameter.filterText) != -1;
+            doKeepTheLine = logItem.getContent().indexOf(logParameter.filterText) != -1 || logItem.getLocalisation().indexOf(logParameter.filterText) != -1;
 
         }
         return doKeepTheLine;

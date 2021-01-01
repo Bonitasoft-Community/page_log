@@ -18,16 +18,22 @@ import org.bonitasoft.page.log.LogAccess.PERIMETER;
 public class LogItem {
 
 	private static String blanckString = "                                                    ";
-	private static SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
-	// keep the date as a String to go fast
+	public static SimpleDateFormat sdf1 = new SimpleDateFormat("yyyy-MM-dd HH:mm:SS");
+	// 31-Dec-2020 11:00:22.097
+	public static SimpleDateFormat sdf2 = new SimpleDateFormat("yyyy-MMM-dd HH:mm:SS");
+    // 2020-12-31T01:09:24,448+0100
+    public static SimpleDateFormat sdfBonitaCloud = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss");
+
+    // keep the date as a String to go fast
 	public long lineNumber;
-	public String dateSt;
+	
 	private Date dateTime;
-	String logLevel=null;
+	private String dateTimePartialSt; // if dateTimeIs null, then we may have part of the date here. In any case, when 
+	private String logLevel=null;
 	public int nbLines;
 
 	/** normal way to collect the information */
-	final StringBuffer content = new StringBuffer();
+	private final StringBuffer content = new StringBuffer();
 
 	/**
 	 * brut line : this string is then used
@@ -51,7 +57,7 @@ public class LogItem {
 	// this is an internal mark to detect the first line : on the second line,
 	// there are some interresing information
 	public boolean firstLine;
-	public String localisation;
+	private String localisation;
 	public LogParameter logParameter;
 
 	public LogItem(final LogParameter logParameter) {
@@ -78,20 +84,29 @@ public class LogItem {
 	 * *************************************************************************
 	 * *******
 	 */
+    public void setDate(final Date date) {
+        dateTime = date;
+    }
 	public void setDate(final String date) {
 		try {
-			dateTime = sdf.parse(date);
+			dateTime = sdf1.parse(date);
 		} catch (Exception e) {
 		}
-		;
+		if (dateTime==null)
+	        try {
+	            dateTime = sdf2.parse(date);
+	        } catch (Exception e) {
+	        }
+
+		
 		if (logParameter.filterShortDate) {
 			final StringTokenizer st = new StringTokenizer(date, " ");
 			if (st.hasMoreTokens()) {
 				st.nextToken();
 			}
-			dateSt = st.hasMoreTokens() ? st.nextToken() : date;
+			dateTimePartialSt = st.hasMoreTokens() ? st.nextToken() : date;
 		} else {
-			dateSt = date;
+		    dateTimePartialSt = date;
 		}
 
 	}
@@ -141,9 +156,20 @@ public class LogItem {
 
 	public void addBrut(final String line) {
 		this.line = line;
-	}
-
-	/*
+	}	
+	
+    public String getLocalisation() {
+        return localisation;
+    }
+    
+    public void setLocalisation(String localisation) {
+        this.localisation = localisation;
+    }
+    
+    public StringBuffer getContent() {
+        return content;
+    }
+    /*
 	 * ***********************************************************************
 	 */
 	/*                                                                                  */
@@ -323,7 +349,7 @@ public class LogItem {
 		final Map<String, Object> map = new HashMap<>();
 		if (line == null) {
 			map.put("lin", lineNumber);
-			map.put("dte", dateSt);
+			map.put("dte", getDateSt() );
 			map.put("lvl", logLevel);
 			map.put("cnt", content.toString());
 			map.put("loc", localisation);
@@ -341,9 +367,13 @@ public class LogItem {
 
 	}
 
+	
+	public String getDateSt() {
+	    return dateTime==null ? dateTimePartialSt : sdf1.format(dateTime);
+	}
 	@Override
 	public String toString() {
-		return "#" + lineNumber + " " + dateSt + "/" + (logLevel + blanckString).substring(0, 8) + "/" + (localisation + blanckString).substring(0, 20) + "/(" + content.length() + ") " + (content + blanckString).substring(0, 40);
+		return "#" + lineNumber + " " + getDateSt() + "/" + (logLevel + blanckString).substring(0, 8) + "/" + (localisation + blanckString).substring(0, 20) + "/(" + content.length() + ") " + (content + blanckString).substring(0, 40);
 	}
 
 	/*
