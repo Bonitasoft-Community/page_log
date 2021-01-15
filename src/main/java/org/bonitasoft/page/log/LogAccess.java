@@ -154,23 +154,25 @@ public class LogAccess {
         }
     }
 
-    // TWOLINE : 2017-02-27 09:03:47.992 -0800 org.bonitasoft.tomcat.H2Listener
+    // TWOLINE : 
+    // 2017-02-27 09:03:47.992 -0800 org.bonitasoft.tomcat.H2Listener
     // org.bonitasoft.tomcat.H2Listener lifecycleEvent
-    // ONELINE : 2017-02-24 00:21:16.292 -0500 SEVERE:
-    // org.bonitasoft.engine.execution.work.FailureHandlingBonitaWork
-    // THREAD_ID=7472 | HOSTNAME=ip-10-74-58-84.ebiz.verizon.com | TENANT_ID=1 |
-    // The work [ExecuteConnectorOfActivity: flowNodeInstanceId = 11040113,
-    // connectorDefinitionName = Post NF job event] failed. The failure will be
-    // handled.
+    
+    // ONELINEEXTENDED :
+    // 2017-02-24 00:21:16.292 -0500 SEVERE: org.bonitasoft.engine.execution.work.FailureHandlingBonitaWork THREAD_ID=7472 | HOSTNAME=ip-10-74-58-84.ebiz.verizon.com | TENANT_ID=1 | The work [ExecuteConnectorOfActivity: flowNodeInstanceId = 11040113,
+
+    // ONELINECOMPACT:
+    // 15-Jan-2021 10:00:40.183 INFOS [http-nio-8080-exec-1] org.bonitasoft.console.common.server.page.PageServlet.renderThemeResource Unable tor retrieve app parameter for resource theme.css. Request referer is missing an an app parameter. Forwarding to the portal theme.
 
     public enum FormatLineLog {
-        ONELINE, TWOLINES, BONITACLOUD
+        ONELINE, TWOLINES, BONITACLOUD, ONELINEEXTENDED
     }
 
     public static class FormatLog {
 
         FormatLineLog formatLineLog = null;
         int posEndDate = -1;
+        int posStartLevel=-1;
 
     }
 
@@ -490,8 +492,8 @@ public class LogAccess {
                                 if (formatLog.formatLineLog == FormatLineLog.TWOLINES) {
                                     currentLogItem.setDate(line.substring(0, formatLog.posEndDate));
                                     currentLogItem.firstLine = true;
-                                    final int posFirstBlanck = line.indexOf(" ", formatLog.posEndDate + 1);
-                                    currentLogItem.setLocalisation(posFirstBlanck == -1 ? line.substring(formatLog.posEndDate + 1) : line.substring(posFirstBlanck + 1));
+                                    final int posFirstBlanck = line.indexOf(" ", formatLog.posStartLevel + 1);
+                                    currentLogItem.setLocalisation(posFirstBlanck == -1 ? line.substring(formatLog.posStartLevel + 1) : line.substring(posFirstBlanck + 1));
                                 } else {
                                     currentLogItem.firstLine = false;
                                     decodeLine(formatLog, currentLogItem, line);
@@ -867,10 +869,15 @@ public class LogAccess {
             logger.info("LogAccess.detectFormat on the line [" + line + "]");
         }
 
-        final int posEndDay = line.indexOf(" ");
-        if (posEndDay > 0) {
+        StringTokenizer st = new StringTokenizer(line," ");
+        List<String> listTokens = new ArrayList<>();
+        while (st.hasMoreTokens())
+            listTokens.add( st.nextToken());
+
+        // Bonitcloud? We base that the first token is a date
+        if (! listTokens.isEmpty()) {
             try {
-                LogItem.sdfBonitaCloud.parse(line.substring(0, posEndDay));
+                LogItem.sdfBonitaCloud.parse( listTokens.get( 0 ));
                 formatLog.formatLineLog = FormatLineLog.BONITACLOUD;
                 return formatLog;
             } catch (Exception e) {
@@ -878,41 +885,63 @@ public class LogAccess {
             }
         }
 
+        
+        // TOWLINE : line contains only the date
+        // 31-Dec-2020 11:00:22.097 +0300
+        // INFO
+        if (listTokens.size()<=3) {
+            formatLog.formatLineLog = FormatLineLog.TWOLINES;
+            return formatLog;
+        }
+
         // expected 31-Dec-2020 11:00:22.097 INFOS : move to the next date then
-        formatLog.posEndDate = line.indexOf(" ");
-        if (formatLog.posEndDate > 0)
-            formatLog.posEndDate = line.indexOf(" ", formatLog.posEndDate + 1);
-        if (formatLog.posEndDate == -1) {
-            formatLog.formatLineLog = FormatLineLog.TWOLINES;
-            return formatLog;
-        }
 
-        final int posLevel = line.indexOf(" ", formatLog.posEndDate + 1);
-        if (posLevel == -1) {
-            formatLog.formatLineLog = FormatLineLog.TWOLINES;
-            return formatLog;
-        }
-
-        String level = line.substring(formatLog.posEndDate, posLevel);
-
-        // if the text is somethink like INFO, INFOS: SEVERE then this is a
-        // level.
-        // how to detect it ? Let's detect if this is a INFO, WARNING... if this is a word in UPPER CASE, this is
-        // a level.
-        if (level.endsWith(":"))
-            level = level.substring(0, level.length() - 1);
-        level = level.toUpperCase().trim();
-        if (LogInformation.listWarnings.contains(level)
-                || LogInformation.listErrors.contains(level)
-                || LogInformation.listInfos.contains(level)
-                || LogInformation.listDebugs.contains(level))
+        // Level is on position 2 or 3
+        if (listTokens.size() >= 3 && isLevelDetected( listTokens.get(2)) ) {
             formatLog.formatLineLog = FormatLineLog.ONELINE;
-        else
-            formatLog.formatLineLog = FormatLineLog.TWOLINES;
+            // calculate the posEndDate
+             
+            formatLog.posEndDate = indexOf(line, " ", 2);
+            formatLog.posStartLevel = formatLog.posEndDate;
+            return formatLog;
+        }
+        // expected 2021-01-08 10:10:08.007 +0300 INFO  
+        if (listTokens.size() >= 4 && isLevelDetected( listTokens.get(3)) ) {
+            formatLog.formatLineLog = FormatLineLog.ONELINEEXTENDED;
+            formatLog.posEndDate    = indexOf(line, " ", 2);
+            formatLog.posStartLevel = indexOf(line, " ", 3);
+            return formatLog;
+        }
+        
+            
+        formatLog.formatLineLog = FormatLineLog.TWOLINES;
 
         return formatLog;
     }
+    
+    
+    private static int indexOf(String line, String separator, int occurence) {
+        int pos = 0;
+        for (int i=0;i<occurence;i++) {
+            pos = line.indexOf(separator,pos+1);
+            if (pos==-1)
+                return -1;
+        }
+        return pos;
+    }
+    private static boolean isLevelDetected(String levelString) {
+        if (levelString.endsWith(":"))
+            levelString = levelString.substring(0, levelString.length() - 1);
+        levelString = levelString.toUpperCase().trim();
+        if (LogInformation.listWarnings.contains(levelString)
+                || LogInformation.listErrors.contains(levelString)
+                || LogInformation.listInfos.contains(levelString)
+                || LogInformation.listDebugs.contains(levelString))
+            return true;
+        else
+            return false;
 
+    }
     /**
      * decode the line according the ONELINE or TWOLINES policy
      * Nota: the synthesis (error ? ...) will be done during the Loginformation.addLogItem() method
@@ -951,11 +980,11 @@ public class LogAccess {
             logItem.setLocalisation(localisationSt);
             logItem.addContent(messageSt);
 
-        } else if (FormatLineLog.ONELINE.equals(formatLog.formatLineLog)) {
+        } else if (FormatLineLog.ONELINE.equals(formatLog.formatLineLog) || FormatLineLog.ONELINEEXTENDED.equals(formatLog.formatLineLog)) {
             logItem.setDate(line.substring(0, formatLog.posEndDate));
-            final int pos = line.indexOf(" ", formatLog.posEndDate + 1);
+            final int pos = line.indexOf(" ", formatLog.posStartLevel + 1);
             if (pos != -1) {
-                logItem.setLevel(line.substring(formatLog.posEndDate, pos));
+                logItem.setLevel(line.substring(formatLog.posStartLevel, pos));
 
                 final int posLoca = line.indexOf(" ", pos + 1);
                 if (posLoca != -1) {

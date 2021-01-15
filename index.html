@@ -46,7 +46,7 @@
 
 	<center>
 	<table>
-		<tr><td><h1>Logs on server</h1></td><td style="font-size:0.8em;vertical-align:bottom"> V2.8.0 (Dec 31 2020)</span></td>
+		<tr><td><h1>Logs on server</h1></td><td style="font-size:0.8em;vertical-align:bottom"> V2.8.1 (Jan 15 2021)</span></td>
 		</tr>
 	</table>
 	</center>
@@ -126,6 +126,8 @@
 	 						<a  class="btn btn-primary" href="?page=custompage_log&action=zipanddownload&paramjson={{ctrl.getDowloadFile()}}">Zip and Download</a>	 						
 	 						</td>
 					</table>
+	
+					<div ng-bind-html="ctrl.getListEvents(ctrl.listevents )"></div>
 					
 					
 				</div>
@@ -467,6 +469,7 @@
 <script src="3rd-party/angular-bootstrap-tpls.min.js"></script>
 <script src="3rd-party/angular-file-upload.js"></script>
 <script src="3rd-party/ng-google-chart.js"></script>
+<script src="3rd-party/angular-sanitize.min.js"></script>
 
 
 <!-- Application dependencies -->

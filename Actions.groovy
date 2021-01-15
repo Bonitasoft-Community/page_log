@@ -117,15 +117,8 @@ public class Actions {
                   
                 LogInformation logInformation = LogAccess.getLog(logParameters);
                 
-                 
-                actionAnswer.responseMap.put("logfilename", logInformation.logFileName);
-                actionAnswer.responseMap.put("completeLogFileName", logInformation.completeLogFileName);
+                actionAnswer.responseMap = logInformation.getMap();
                 
-                actionAnswer.responseMap.put("listLogItems", logInformation.getListLogsJson());
-                actionAnswer.responseMap.put("analysisSynthese", logInformation.getAnalysisSyntheseJson());
-                actionAnswer.responseMap.put("analysisTimeLine", logInformation.getAnalysisErrorTimeLineJson());
-                actionAnswer.responseMap.put("totalLines", logInformation.lineNumberFiltered);                
-                actionAnswer.responseMap.put("totalLinesFiles", logInformation.nbTotalLines);
 			}	
 			else if ("zipanddownload".equals(action))
 			{

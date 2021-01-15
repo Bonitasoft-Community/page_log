@@ -2,12 +2,14 @@ package org.bonitasoft.page.log;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import org.bonitasoft.log.event.BEvent;
+import org.bonitasoft.log.event.BEventFactory;
 import org.bonitasoft.page.log.LogAccess.LogParameter;
 
 /**
@@ -169,6 +171,21 @@ public class LogInformation {
         return logAnalyseError.getTimeLine().toJson();
     }
 
+    public Map<String, Object> getMap() {
+        Map<String, Object> result = new HashMap<>();
+    
+        result.put("logfilename", logFileName);
+        result.put("completeLogFileName", completeLogFileName);
+    
+        result.put("listLogItems", getListLogsJson());
+        result.put("analysisSynthese", getAnalysisSyntheseJson());
+        result.put("analysisTimeLine", getAnalysisErrorTimeLineJson());
+        result.put("totalLines", lineNumberFiltered);                
+        result.put("totalLinesFiles", nbTotalLines);
+        result.put("listevents", BEventFactory.getHtml( listEvents ));
+        return result;
+    }
+    
     /*
      * *************************************************************************
      * *******

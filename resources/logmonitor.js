@@ -6,7 +6,7 @@
 (function() {
 
 
-var appCommand = angular.module('logmonitor', [ 'googlechart', 'ui.bootstrap','ngCookies']);
+var appCommand = angular.module('logmonitor', [ 'googlechart','ngSanitize','ui.bootstrap','ngCookies']);
 
 
 
@@ -21,7 +21,7 @@ var appCommand = angular.module('logmonitor', [ 'googlechart', 'ui.bootstrap','n
 
 // Ping the server
 appCommand.controller('LogControler',
-	function ( $http, $scope, $interval, $cookies ) {
+	function ( $http, $scope, $sce, $interval, $cookies ) {
 
 	this.wait = false;
 	this.listfileslog=[];
@@ -146,6 +146,7 @@ appCommand.controller('LogControler',
 		var self=this;
 		self.wait = true;
 		self.refreshisrunning=true;
+		self.listevents ='';
 		
 		var json= encodeURI( angular.toJson(this.display, true));
 		var d = new Date();
@@ -164,14 +165,15 @@ appCommand.controller('LogControler',
 					// self.analysisTimeLine				= jsonResult.analysisTimeLine;
 					$scope.analysisTimeLine		 		= JSON.parse(jsonResult.analysisTimeLine.graph);
 					
-					self.logFileName 					= jsonResult.logfilename;	
+					self.logFileName 									= jsonResult.logfilename;	
 					self.display.completeLogFileName 	= jsonResult.completeLogFileName;	
-					self.display.totalLines 			= jsonResult.totalLines;
-					self.display.totalLinesFiles		= jsonResult.totalLinesFiles;
-					self.wait 							= false;
-					self.refreshisrunning				= false;	
+					self.display.totalLines 							= jsonResult.totalLines;
+					self.display.totalLinesFiles					= jsonResult.totalLinesFiles;
+					self.wait 													= false;
+					self.refreshisrunning								= false;	
 					// close the logs file panel
-					self.display.showLogs = false;
+					self.display.showLogs 							= false;
+					self.listevents 										= jsonResult.listevents;
 
 				})
 				.error( function() {
@@ -222,7 +224,6 @@ appCommand.controller('LogControler',
 			line = line + ";padding:5px;";
 		return line;
 	}
-
 	/**
 	 * download the files
 	 */
@@ -243,6 +244,19 @@ appCommand.controller('LogControler',
 		var json= encodeURI( angular.toJson(listToDowload, true));
 		return json;
 	};
+	// -----------------------------------------------------------------------------------------
+	//  										tool
+	// -----------------------------------------------------------------------------------------
+
+	this.getListEvents = function ( listevents ) {
+		// console.log("getListEvents="+listevents);
+		if (listevents === 'undefined')
+			return "";
+		if (! listevents)
+			return "";
+		return $sce.trustAsHtml( String( listevents ) );
+	}
+
 	this.getCurrentLog(); // First initialisation display current log
 });
 
