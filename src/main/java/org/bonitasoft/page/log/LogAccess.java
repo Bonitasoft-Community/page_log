@@ -411,7 +411,8 @@ public class LogAccess {
             br = new BufferedReader(new FileReader(logInformation.completeLogFileName));
 
             String line = br.readLine();
-            line = new String(line.getBytes(), StandardCharsets.UTF_8);
+            if (line!=null)
+                line = new String(line.getBytes(), StandardCharsets.UTF_8);
 
             lineNumber++;
 
